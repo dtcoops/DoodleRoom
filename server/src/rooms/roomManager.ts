@@ -1,5 +1,5 @@
 import { generateRoomCode } from "./roomCode";
-import type { Room, JoinResult, Player } from "./types";
+import type { Room, JoinResult, Player, LeaveResult } from "./types";
 
 // a mutable shared state for all players
 const rooms: Map<string, Room> = new Map();
@@ -36,24 +36,28 @@ export function joinRoom(code: string, player: Player): JoinResult {
     return { success: true, room };
 }
 
-export function leaveRoom(code: string, player: Player): void {
+export function leaveRoom(code: string, playerId: string): LeaveResult {
     const room = rooms.get(code);
     
-    const isInRoom = room?.players.some((p) => p.id === player.id);
-    if (!room || !isInRoom) {
-        return;
+    const isInRoom = room?.players.some((p) => p.id === playerId);
+    if (!room) {
+        return { success: false, reason: "Room not found."};
+    }
+    if (!isInRoom) {
+        return { success: false, reason: "Player not in Room."};
     }
 
-    room.players = room.players.filter((p) => { return p.id !== player.id });
+    room.players = room.players.filter((p) => { return p.id !== playerId });
 
     if (room.players.length === 0) {
         rooms.delete(code);
-        return;
+        return { success: true, room};
     }
 
-    if (room.hostId === player.id) {
+    if (room.hostId === playerId) {
         room.hostId = room.players[0].id;
     }
+    return { success: true, room};
 }
 
 export function _clearRoomsForTesting() {

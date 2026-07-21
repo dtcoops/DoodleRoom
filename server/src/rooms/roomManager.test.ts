@@ -56,7 +56,7 @@ describe('Leave Room', () => {
 
         const room = createRoom(host);
         joinRoom(room.roomCode, player);
-        leaveRoom(room.roomCode, player);
+        leaveRoom(room.roomCode, player.id);
 
         expect(room.players).toEqual([host]);
     });
@@ -67,8 +67,8 @@ describe('Leave Room', () => {
 
         const room = createRoom(host);
         joinRoom(room.roomCode, player);
-        leaveRoom(room.roomCode, player);
-        leaveRoom(room.roomCode, host);
+        leaveRoom(room.roomCode, player.id);
+        leaveRoom(room.roomCode, host.id);
 
         // An Empty Room deletes itself
         // Can't check with room as it is a local variable
@@ -84,7 +84,7 @@ describe('Leave Room', () => {
 
         const room = createRoom(host);
         joinRoom(room.roomCode, player);
-        leaveRoom(room.roomCode, host);
+        leaveRoom(room.roomCode, host.id);
 
         expect(room.hostId).toBe(player.id);
     });
