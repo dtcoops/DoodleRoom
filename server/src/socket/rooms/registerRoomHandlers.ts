@@ -1,6 +1,6 @@
 import { Server, Socket } from 'socket.io';
 import { createRoom, joinRoom, leaveRoom } from '../../rooms/roomManager';
-import type { Player } from '../../rooms/types';
+import type { Player } from '../../types/types';
 import { resourceLimits } from 'node:worker_threads';
 
 export function registerRoomHandlers(io: Server, socket: Socket, socketRoomMap: Map<string, string>) {

@@ -1,5 +1,7 @@
 import { generateRoomCode } from "./roomCode";
-import type { Room, JoinResult, Player, LeaveResult } from "./types";
+import { generateGameState } from "../game/gameState";
+import type { Room, Player } from "../types/types";
+import type { JoinResult, LeaveResult } from "./types";
 
 // a mutable shared state for all players
 const rooms: Map<string, Room> = new Map();
@@ -20,7 +22,8 @@ export function createRoom(host: Player): Room {
     const room: Room = { 
         roomCode: roomCode, 
         hostId: host.id, 
-        players: [host] 
+        players: [host],
+        gameState: generateGameState(1) // Placeholder - assigned in gameManager
     };
     rooms.set(roomCode, room);
     return room;

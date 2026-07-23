@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { createRoom, joinRoom, leaveRoom, _clearRoomsForTesting} from "./roomManager";
-import type { Player } from './types';
+import type { Player } from '../types/types';
 
 vi.mock('./roomCode', () => ({
     generateRoomCode: () => 'AAAA',
