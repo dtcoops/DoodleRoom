@@ -22,7 +22,6 @@ describe('Game Manager', () => {
     it('gameStart on a freshly created room with an override', () => {
         const host: Player = { id: 'player-1', name: "daniel" };
         const room = createRoom(host);
-        const beforeStart = Date.now();
 
         gameStart(room, 3);
         
