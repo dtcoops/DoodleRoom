@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll, vi, beforeEach, afterEach } from 'vitest';
 import { createServer } from 'http';
 import { io as ioClient, Socket as ClientSocket } from 'socket.io-client';
 import { registerSocketHandlers } from '../index';
@@ -9,7 +9,7 @@ describe('Room Socket Handlers', () => {
     let hostSocket: ClientSocket;
     const PORT = 4002; // make sure it does not use the same as app or other test packages.
 
-    beforeAll(() => {
+    beforeEach(() => {
         return new Promise<void>((resolve) => {
             httpServer = createServer();
             registerSocketHandlers(httpServer); // wires up io on this test server
@@ -20,7 +20,7 @@ describe('Room Socket Handlers', () => {
         });
     });
     
-    afterAll(() => {
+    afterEach(() => {
         hostSocket.close();
         httpServer.close();
     });
