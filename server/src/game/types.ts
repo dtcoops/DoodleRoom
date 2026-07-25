@@ -7,4 +7,5 @@ export type GameState = {
   totalRounds: number;
   currentWord: string | null;
   roundEndsAt: number | null;
+  turnOrder: string[];
 }

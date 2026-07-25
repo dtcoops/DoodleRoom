@@ -12,6 +12,7 @@ describe('generateGameState', () => {
       totalRounds: 3,
       currentWord: null,
       roundEndsAt: null,
+      turnOrder: []
     });
   });
 });

@@ -1,7 +1,7 @@
 import { Server, Socket } from 'socket.io';
 import { createRoom, joinRoom, leaveRoom } from '../../rooms/roomManager';
+import { handlePlayerLeftDuringGame } from '../../game/gameManager';
 import type { Player } from '../../types/types';
-import { resourceLimits } from 'node:worker_threads';
 
 export function registerRoomHandlers(io: Server, socket: Socket, socketRoomMap: Map<string, string>) {
     socket.on('room:create', ({ name }: { name: string }) => {
@@ -58,6 +58,7 @@ export function registerRoomHandlers(io: Server, socket: Socket, socketRoomMap: 
 
             socket.leave(roomCode);
             socketRoomMap.delete(socket.id);
+            handlePlayerLeftDuringGame(result.room, socket.id);
 
             socket.emit('room:leaveResult', result);
             socket.to(roomCode).emit('room:playerLeft', { playerId: socket.id });
@@ -73,10 +74,13 @@ export function registerRoomHandlers(io: Server, socket: Socket, socketRoomMap: 
                 return;
             }
 
-            leaveRoom(roomCode, socket.id);
+            const result = leaveRoom(roomCode, socket.id);
             socketRoomMap.delete(socket.id);
-
-            socket.to(roomCode).emit('room:playerLeft', { playerId: socket.id });
+            
+            if (result.success) {
+                handlePlayerLeftDuringGame(result.room, socket.id);
+                socket.to(roomCode).emit('room:playerLeft', { playerId: socket.id });
+            }
         } catch (error) {
             console.error(error)
         }

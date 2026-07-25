@@ -8,5 +8,6 @@ export function generateGameState(totalRounds: number): GameState {
         totalRounds,
         currentWord: null,
         roundEndsAt: null,
+        turnOrder: [],
     }
 }

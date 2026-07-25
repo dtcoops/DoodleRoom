@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import type { Player } from '../types/types';
 import { createRoom } from '../rooms/roomManager';
-import { gameStart } from './gameManager';
+import { gameStart, advanceToNextRound, handlePlayerLeftDuringGame } from './gameManager';
 
 describe('Game Manager', () => {
     it('gameStart on a freshly created room with no override', () => {
@@ -17,6 +17,8 @@ describe('Game Manager', () => {
         expect(room.gameState.totalRounds).toBe(1);
         expect(room.gameState.currentWord).not.toBeNull();
         expect(room.gameState.roundEndsAt).toBeGreaterThan(beforeStart);
+        expect(room.gameState.turnOrder).toEqual(['player-1']);
+
     });
 
     it('gameStart on a freshly created room with an override', () => {
@@ -29,3 +31,73 @@ describe('Game Manager', () => {
     });
 });
 
+describe('advanceToNextRound', () => {
+    it('advances to the next round and picks the next drawer', () => {
+        const host: Player = { id: 'player-1', name: 'Host' };
+        const room = createRoom(host);
+        room.players.push({ id: 'player-2', name: 'Bob' });
+        gameStart(room, 2); // 2 total rounds
+
+        advanceToNextRound(room);
+
+        expect(room.gameState.phase).toBe('DRAWING');
+        expect(room.gameState.roundNumber).toBe(2);
+        expect(room.gameState.drawerId).toBe('player-2');
+    });
+
+    it('transitions to GAME_OVER once all rounds are complete', () => {
+        const host: Player = { id: 'player-1', name: 'Host' };
+        const room = createRoom(host);
+        gameStart(room, 1);
+
+        advanceToNextRound(room);
+
+        expect(room.gameState.phase).toBe('GAME_OVER');
+        expect(room.gameState.drawerId).toBeNull();
+    });
+});
+
+describe("handlePlayerLeftDuringGame", () => {
+    it('Does nothing during WAITING the game state', () => {
+        const host: Player = { id: 'player-1', name: 'Host' };
+        const room = createRoom(host);
+
+        handlePlayerLeftDuringGame(room, 'player-1');
+
+        expect(room.gameState.turnOrder).toEqual([]);
+    });
+    it('Does nothing during GAME_OVER the game state', () => {
+        const host: Player = { id: 'player-1', name: 'Host' };
+        const room = createRoom(host);
+        gameStart(room, 1); // 1 round max
+        advanceToNextRound(room); // triggers end as there was only 1 round
+
+        const turnOrderBefore = [...room.gameState.turnOrder];
+        handlePlayerLeftDuringGame(room, 'player-1');
+
+        expect(room.gameState.turnOrder).toEqual(turnOrderBefore);
+    });
+    it('Non-drawing player leaves during DRAWING game state, silently removes player from turn order', () => {
+        const host: Player = { id: 'player-1', name: 'Host' };
+        const player: Player = { id: 'player-2', name: 'Player' };
+        const room = createRoom(host);
+        room.players.push(player);
+        gameStart(room, 2);
+
+        handlePlayerLeftDuringGame(room, 'player-2');
+        expect(room.gameState.turnOrder).toEqual(['player-1']);
+    });
+    it('The drawer leaves during DRAWING game state, should move to next round', () => {
+        const host: Player = { id: 'player-1', name: 'Host' };
+        const player: Player = { id: 'player-2', name: 'Player' };
+        const room = createRoom(host);
+        room.players.push(player);
+        gameStart(room, 2);
+
+        handlePlayerLeftDuringGame(room, 'player-1'); // Room host defaults to drawerId. Drawer leaves during game.
+        expect(room.gameState.turnOrder).toEqual(['player-2']);
+        expect(room.gameState.roundNumber).toBe(2);
+        expect(room.gameState.drawerId).toBe('player-2');
+        expect(room.gameState.phase).toBe('DRAWING');
+    });
+});
