@@ -1,5 +1,5 @@
 import type { Player, Room } from "../types/types";
-import type { GameState } from "./types";
+import type { GameState, OnRoundAdvance } from "./types";
 import { generateRandomWord } from "./wordGenerator";
 
 const ROUND_DURATION_MS = 60_000;
@@ -18,52 +18,68 @@ function getNextDrawerId(room: Room): string {
 }
 
 function startRound(room: Room) : void {
+    clearRoundTimer(room);
+
     room.gameState.phase = 'DRAWING';
     room.gameState.drawerId = getNextDrawerId(room);
     room.gameState.currentWord = generateRandomWord();
     room.gameState.roundEndsAt = Date.now() + ROUND_DURATION_MS;
+
+    room.gameState.roundTimer = setTimeout(() => {
+        advanceToNextRound(room);
+    }, ROUND_DURATION_MS);
 }
 
-export function gameStart(room: Room, totalRoundsOverride?: number): void {
+export function gameStart(room: Room, totalRoundsOverride?: number, onRoundAdvance?: OnRoundAdvance): void {
     room.gameState.totalRounds = totalRoundsOverride ?? room.players.length;
     room.gameState.roundNumber = 1;
     room.gameState.turnOrder = room.players.map((p) => p.id);
     startRound(room);
+    onRoundAdvance?.(room);
+}
+
+export function clearRoundTimer(room: Room): void {
+    if (room.gameState.roundTimer) {
+        clearTimeout(room.gameState.roundTimer);
+        room.gameState.roundTimer = null;
+    }
 }
 
 function endGame(room: Room): void {
+    clearRoundTimer(room);
     room.gameState.phase = 'GAME_OVER';
     room.gameState.drawerId = null;
 }
 
-export function advanceToNextRound(room: Room): void {
+export function advanceToNextRound(room: Room, onRoundAdvance?: OnRoundAdvance): void {
     room.gameState.roundNumber += 1;
 
     if (room.gameState.roundNumber > room.gameState.totalRounds) {
         endGame(room);
-        return;
+    } else {
+        startRound(room);
     }
 
-    startRound(room);
+    onRoundAdvance?.(room);
 }
 
 function removeFromTurnOrder(room: Room, playerId: string): void {
     room.gameState.turnOrder = room.gameState.turnOrder.filter((id) => id !== playerId);
 }
 
-export function handlePlayerLeftDuringGame(room: Room, playerId: string): void {
+export function handlePlayerLeftDuringGame(room: Room, playerId: string, onRoundAdvance?: OnRoundAdvance): void {
     if (room.gameState.phase === 'WAITING' || room.gameState.phase === 'GAME_OVER') {
         return;
     }
-
+    
     removeFromTurnOrder(room, playerId);
     if (room.gameState.drawerId === playerId) {
-        advanceToNextRound(room);
+        advanceToNextRound(room, onRoundAdvance);
     }
 }
 
-export function toPublicGameState(gameState: GameState): Omit<GameState, 'currentWord'> & { wordLength: number | null } {
-    const { currentWord, ...rest } = gameState;
+export function toPublicGameState(gameState: GameState): Omit<GameState, 'currentWord' | 'roundTimer'> & { wordLength: number | null } {
+    const { currentWord, roundTimer, ...rest } = gameState;
     return {
         ...rest,
         wordLength: currentWord ? currentWord.length : null,

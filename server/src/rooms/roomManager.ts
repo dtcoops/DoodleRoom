@@ -54,13 +54,13 @@ export function leaveRoom(code: string, playerId: string): LeaveResult {
 
     if (room.players.length === 0) {
         rooms.delete(code);
-        return { success: true, room};
+        return { success: true, room, roomDeleted: true};
     }
 
     if (room.hostId === playerId) {
         room.hostId = room.players[0].id;
     }
-    return { success: true, room};
+    return { success: true, room, roomDeleted: false};
 }
 
 export function getRoom(roomCode: string): Room | undefined {

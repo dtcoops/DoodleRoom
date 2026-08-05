@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import type { Player } from '../types/types';
 import { createRoom } from '../rooms/roomManager';
 import { gameStart, advanceToNextRound, handlePlayerLeftDuringGame, toPublicGameState } from './gameManager';
@@ -99,5 +99,58 @@ describe("handlePlayerLeftDuringGame", () => {
         expect(room.gameState.roundNumber).toBe(2);
         expect(room.gameState.drawerId).toBe('player-2');
         expect(room.gameState.phase).toBe('DRAWING');
+    });
+});
+
+
+describe('round timer', () => {
+    beforeEach(() => {
+        vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+        vi.useRealTimers();
+    });
+
+    it('automatically advances to the next round once time runs out', () => {
+        const host: Player = { id: 'player-1', name: 'Host' };
+        const room = createRoom(host);
+        room.players.push({ id: 'player-2', name: 'Player' });
+        gameStart(room, 2);
+
+        expect(room.gameState.roundNumber).toBe(1);
+
+        vi.advanceTimersByTime(60_000); // fast-forward exactly one round's duration
+
+        expect(room.gameState.roundNumber).toBe(2);
+    });
+
+    it('schedules a new timer for each round', () => {
+        const host: Player = { id: 'player-1', name: 'Host' };
+        const room = createRoom(host);
+        room.players.push({ id: 'player-2', name: 'Player' });
+        gameStart(room, 2);
+
+        const firstRoundTimer = room.gameState.roundTimer;
+        expect(firstRoundTimer).not.toBeNull();
+
+        vi.advanceTimersByTime(60_000);
+
+        const secondRoundTimer = room.gameState.roundTimer;
+        expect(secondRoundTimer).not.toBeNull();
+        expect(secondRoundTimer).not.toBe(firstRoundTimer);
+    });
+
+    it('does not leave a stale timer behind when advancing rounds', () => {
+        const host: Player = { id: 'player-1', name: 'Host' };
+        const room = createRoom(host);
+        room.players.push({ id: 'player-2', name: 'Bob' });
+        gameStart(room, 2);
+
+        expect(vi.getTimerCount()).toBe(1); // one timer scheduled
+
+        vi.advanceTimersByTime(60_000); // round advances
+
+        expect(vi.getTimerCount()).toBe(1); // still just one — old one was cleared, new one scheduled
     });
 });

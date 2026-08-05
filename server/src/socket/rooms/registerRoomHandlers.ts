@@ -1,6 +1,7 @@
 import { Server, Socket } from 'socket.io';
 import { createRoom, joinRoom, leaveRoom } from '../../rooms/roomManager';
-import { handlePlayerLeftDuringGame } from '../../game/gameManager';
+import { handlePlayerLeftDuringGame, clearRoundTimer } from '../../game/gameManager';
+import { broadcastRoundState } from '../game/broadcastRoundState';
 import type { Player } from '../../types/types';
 
 export function registerRoomHandlers(io: Server, socket: Socket, socketRoomMap: Map<string, string>) {
@@ -58,7 +59,13 @@ export function registerRoomHandlers(io: Server, socket: Socket, socketRoomMap: 
 
             socket.leave(roomCode);
             socketRoomMap.delete(socket.id);
-            handlePlayerLeftDuringGame(result.room, socket.id);
+            if (result.roomDeleted) {
+                clearRoundTimer(result.room); // stop any pending timer for this now-dead room
+            } else {
+                handlePlayerLeftDuringGame(result.room, socket.id, (updatedRoom) => {
+                    broadcastRoundState(io, updatedRoom);
+                });
+            }
 
             socket.emit('room:leaveResult', result);
             socket.to(roomCode).emit('room:playerLeft', { playerId: socket.id });
@@ -77,10 +84,18 @@ export function registerRoomHandlers(io: Server, socket: Socket, socketRoomMap: 
             const result = leaveRoom(roomCode, socket.id);
             socketRoomMap.delete(socket.id);
             
-            if (result.success) {
-                handlePlayerLeftDuringGame(result.room, socket.id);
-                socket.to(roomCode).emit('room:playerLeft', { playerId: socket.id });
+            if (!result.success) {
+                return
             }
+
+            if (result.roomDeleted) {
+                clearRoundTimer(result.room); // stop any pending timer for this now-dead room
+            } else {
+                handlePlayerLeftDuringGame(result.room, socket.id, (updatedRoom) => {
+                    broadcastRoundState(io, updatedRoom);
+                });
+            }
+            socket.to(roomCode).emit('room:playerLeft', { playerId: socket.id });
         } catch (error) {
             console.error(error)
         }

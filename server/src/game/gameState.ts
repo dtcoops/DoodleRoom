@@ -9,5 +9,6 @@ export function generateGameState(totalRounds: number): GameState {
         currentWord: null,
         roundEndsAt: null,
         turnOrder: [],
+        roundTimer: null,
     }
 }

@@ -16,6 +16,7 @@ describe('toPublicGameState', () => {
             currentWord: 'boat',
             roundEndsAt: Date.now() + 60_000,
             turnOrder: ['player-1', 'player-2'],
+            roundTimer: null,
         };
 
         const publicState = toPublicGameState(gameState);
@@ -33,6 +34,7 @@ describe('toPublicGameState', () => {
             currentWord: null,
             roundEndsAt: null,
             turnOrder: [],
+            roundTimer: null,
         };
 
         const publicState = toPublicGameState(gameState);

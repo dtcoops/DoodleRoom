@@ -2,6 +2,7 @@ import { Server, Socket } from 'socket.io';
 import { gameStart } from '../../game/gameManager';
 import { getRoom } from '../../rooms/roomManager';
 import { toPublicGameState } from '../../game/gameManager';
+import { broadcastRoundState } from './broadcastRoundState';
 
 export function registerGameHandlers(io: Server, socket: Socket, socketRoomMap: Map<string, string>) {
     socket.on('game:start', ({ totalRounds }: { totalRounds?: number }) => {
@@ -20,17 +21,9 @@ export function registerGameHandlers(io: Server, socket: Socket, socketRoomMap: 
                 return;
             }
 
-            gameStart(room, totalRounds);
-
-            // Send sanitized state to everyone in the room
-            const publicState = toPublicGameState(room.gameState);
-            io.to(room.roomCode).emit('game:state', publicState);
-            // Send the word to the Drawer
-            if (!room.gameState.drawerId) {  // shouldn't happen — host is guaranteed present
-                return;
-            }
-            const drawerSocket = io.sockets.sockets.get(room.gameState.drawerId);
-            drawerSocket?.emit('game:word', {word: room.gameState.currentWord});
+            gameStart(room, totalRounds, (updatedRoom) => {
+                broadcastRoundState(io, updatedRoom);
+            });
         } catch (error) {
             console.error('Failed to start game:', error);
         }

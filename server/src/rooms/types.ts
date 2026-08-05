@@ -5,5 +5,5 @@ export type JoinResult =
   | { success: false; reason: string };
 
 export type LeaveResult =
-  | { success: true; room: Room }
+  | { success: true; room: Room; roomDeleted: boolean }
   | { success: false; reason: string };
