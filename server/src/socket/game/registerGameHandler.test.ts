@@ -106,3 +106,60 @@ describe('Room Socket Handlers', () => {
         })
     });
 });
+
+describe('broadcastRoundState timer integration', () => {
+    let httpServer: ReturnType<typeof createServer>;
+    let hostSocket: ClientSocket;
+    const PORT = 4005; // make sure it does not use the same as app or other test packages.
+
+    beforeEach(() => {
+        return new Promise<void>((resolve) => {
+            httpServer = createServer();
+            registerSocketHandlers(httpServer); // wires up io on this test server
+            httpServer.listen(PORT, () => {
+                hostSocket = ioClient(`http://localhost:${PORT}`);
+                hostSocket.on('connect', () => resolve());
+            });
+        });
+    });
+    
+    afterEach(() => {
+        hostSocket.close();
+        httpServer.close();
+    });
+
+    function wait(ms: number): Promise<void> {
+        return new Promise((resolve) => setTimeout(resolve, ms));
+    }
+
+    it('cancels the round timer when the room becomes empty, preventing a broadcast', async () => {
+        const roomCode: string = await new Promise((resolve) => {
+            hostSocket.emit('room:create', { name: 'Host' });
+            hostSocket.once('room:createResult', (result) => resolve(result.room.roomCode));
+        });
+
+        const playerSocket: ClientSocket = ioClient(`http://localhost:${PORT}`);
+        await new Promise<void>((resolve) => playerSocket.on('connect', () => resolve()));
+
+        await new Promise<void>((resolve) => {
+            playerSocket.emit('room:join', { roomCode, name: 'Player' });
+            playerSocket.once('room:joinResult', () => resolve());
+        });
+
+        await new Promise<void>((resolve) => {
+            hostSocket.emit('game:start', { roundDurationMs: 100 }); // needs socket support for this param
+            hostSocket.once('game:state', () => resolve());
+        });
+
+        let receivedBroadcastAfterEmpty = false;
+        hostSocket.on('game:state', () => { receivedBroadcastAfterEmpty = true; });
+
+        // both players leave
+        playerSocket.disconnect();
+        hostSocket.emit('room:leave', { roomCode });
+
+        await wait(300); // give the (should-be-cancelled) 100ms timer a chance to wrongly fire
+
+        expect(receivedBroadcastAfterEmpty).toBe(false);
+    });
+});

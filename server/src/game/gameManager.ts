@@ -2,7 +2,7 @@ import type { Player, Room } from "../types/types";
 import type { GameState, OnRoundAdvance } from "./types";
 import { generateRandomWord } from "./wordGenerator";
 
-const ROUND_DURATION_MS = 60_000;
+const DEFAULT_ROUND_DURATION_MS = 60_000;
 
 function getNextDrawerId(room: Room): string {
     // First round - no drawer assigned yet
@@ -17,17 +17,17 @@ function getNextDrawerId(room: Room): string {
     return room.gameState.turnOrder[nextIndex];
 }
 
-function startRound(room: Room) : void {
+function startRound(room: Room, roundDurationMs: number = DEFAULT_ROUND_DURATION_MS) : void {
     clearRoundTimer(room);
 
     room.gameState.phase = 'DRAWING';
     room.gameState.drawerId = getNextDrawerId(room);
     room.gameState.currentWord = generateRandomWord();
-    room.gameState.roundEndsAt = Date.now() + ROUND_DURATION_MS;
+    room.gameState.roundEndsAt = Date.now() + roundDurationMs;
 
     room.gameState.roundTimer = setTimeout(() => {
         advanceToNextRound(room);
-    }, ROUND_DURATION_MS);
+    }, roundDurationMs);
 }
 
 export function gameStart(room: Room, totalRoundsOverride?: number, onRoundAdvance?: OnRoundAdvance): void {
