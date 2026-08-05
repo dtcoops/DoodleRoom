@@ -1,4 +1,5 @@
 import type { Player, Room } from "../types/types";
+import type { GameState } from "./types";
 import { generateRandomWord } from "./wordGenerator";
 
 const ROUND_DURATION_MS = 60_000;
@@ -60,4 +61,13 @@ export function handlePlayerLeftDuringGame(room: Room, playerId: string): void {
         advanceToNextRound(room);
     }
 }
+
+export function toPublicGameState(gameState: GameState): Omit<GameState, 'currentWord'> & { wordLength: number | null } {
+    const { currentWord, ...rest } = gameState;
+    return {
+        ...rest,
+        wordLength: currentWord ? currentWord.length : null,
+    };
+}
+
 

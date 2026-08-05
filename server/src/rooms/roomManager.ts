@@ -63,6 +63,10 @@ export function leaveRoom(code: string, playerId: string): LeaveResult {
     return { success: true, room};
 }
 
+export function getRoom(roomCode: string): Room | undefined {
+    return rooms.get(roomCode);
+}
+
 export function _clearRoomsForTesting() {
   rooms.clear();
 }

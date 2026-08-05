@@ -1,11 +1,11 @@
 import { describe, it, expect } from 'vitest';
 import type { Player } from '../types/types';
 import { createRoom } from '../rooms/roomManager';
-import { gameStart, advanceToNextRound, handlePlayerLeftDuringGame } from './gameManager';
+import { gameStart, advanceToNextRound, handlePlayerLeftDuringGame, toPublicGameState } from './gameManager';
 
 describe('Game Manager', () => {
     it('gameStart on a freshly created room with no override', () => {
-        const host: Player = { id: 'player-1', name: "daniel" };
+        const host: Player = { id: 'player-1', name: "host" };
         const room = createRoom(host);
         const beforeStart = Date.now();
 
