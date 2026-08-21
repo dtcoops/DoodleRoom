@@ -3,6 +3,7 @@ import type { Server as HttpServer } from 'http';
 
 import { registerRoomHandlers } from './rooms/registerRoomHandlers';
 import { registerGameHandlers } from './game/registerGameHandlers';
+import { registerDrawHandlers } from './game/registerDrawHandlers';
 
 export function registerSocketHandlers(httpServer: HttpServer): Server {
     const io = new Server(httpServer, {
@@ -16,6 +17,7 @@ export function registerSocketHandlers(httpServer: HttpServer): Server {
 
         registerRoomHandlers(io, socket, socketRoomMap);
         registerGameHandlers(io, socket, socketRoomMap);
+        registerDrawHandlers(io, socket, socketRoomMap);
     });
 
     return io;
