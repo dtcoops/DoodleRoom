@@ -11,7 +11,15 @@ export type GameState = {
   roundEndsAt: number | null;
   turnOrder: string[];
   roundTimer: NodeJS.Timeout | null;
+  correctGuessers: string[];
+  scoresAtRoundStart: Record<string, number>;
+  roundDurationMs: number | null;
 }
 
 
 export type OnRoundAdvance = (room: Room) => void;
+
+export type GuessResult =
+  | { status: 'correct'; points: number }
+  | { status: 'incorrect' }
+  | { status: 'rejected'; reason: string };

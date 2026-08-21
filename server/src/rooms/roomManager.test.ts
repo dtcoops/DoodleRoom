@@ -12,7 +12,7 @@ beforeEach(() => {
 
 describe('Create Room', () => {
     it('creates a room with the host as the sole player', () => {
-        const host: Player = { id: 'player-1', name: "host" };
+        const host: Player = { id: 'player-1', name: "host", score: 0 };
         // roomCode will always be mock - randomness tested in roomCode.test
         const room = createRoom(host);
         
@@ -21,19 +21,19 @@ describe('Create Room', () => {
     });
 
      it('throws after exceeding max attempts if every code collides', () => {
-        const host: Player = { id: 'p1', name: 'host' };
+        const host: Player = { id: 'p1', name: 'host', score: 0 };
         createRoom(host);
 
         // Second call will collide every single attempt, since the mock never varies
-        const host2: Player = { id: 'p2', name: 'player' };
+        const host2: Player = { id: 'p2', name: 'player', score: 0 };
         expect(() => createRoom(host2)).toThrow();
     });
 });
 
 describe('Join Room', () => {
     it('join an already created room', () => {
-        const host: Player = { id: 'player-1', name: "host" };
-        const player: Player = { id: 'player-2', name: "player" };
+        const host: Player = { id: 'player-1', name: "host", score: 0 };
+        const player: Player = { id: 'player-2', name: "player", score: 0 };
 
         const room = createRoom(host);
         joinRoom(room.roomCode, player);
@@ -42,7 +42,7 @@ describe('Join Room', () => {
     });
 
     it('returns a failure result when the room does not exist', () => {
-        const player: Player = { id: 'player-2', name: 'player' };
+        const player: Player = { id: 'player-2', name: 'player', score: 0 };
         const result = joinRoom('FAKECODE', player);
 
         expect(result.success).toBe(false);
@@ -51,8 +51,8 @@ describe('Join Room', () => {
 
 describe('Leave Room', () => {
     it('player leaves a room they have joined', () => {
-        const host: Player = { id: 'player-1', name: "host" };
-        const player: Player = { id: 'player-2', name: "player" };
+        const host: Player = { id: 'player-1', name: "host", score: 0 };
+        const player: Player = { id: 'player-2', name: "player", score: 0 };
 
         const room = createRoom(host);
         joinRoom(room.roomCode, player);
@@ -62,8 +62,8 @@ describe('Leave Room', () => {
     });
 
     it('player and host leave the room', () => {
-        const host: Player = { id: 'player-1', name: "host" };
-        const player: Player = { id: 'player-2', name: "player" };
+        const host: Player = { id: 'player-1', name: "host", score: 0 };
+        const player: Player = { id: 'player-2', name: "player", score: 0 };
 
         const room = createRoom(host);
         joinRoom(room.roomCode, player);
@@ -79,8 +79,8 @@ describe('Leave Room', () => {
     });
 
     it('reassigns host if the host leaves and other players remain', () => {
-        const host: Player = { id: 'player-1', name: "host" };
-        const player: Player = { id: 'player-2', name: "player" };
+        const host: Player = { id: 'player-1', name: "host", score: 0 };
+        const player: Player = { id: 'player-2', name: "player", score: 0 };
 
         const room = createRoom(host);
         joinRoom(room.roomCode, player);
@@ -92,7 +92,7 @@ describe('Leave Room', () => {
 
 describe('Get Room', () => {
     it('returns the room code', () => {
-        const host: Player = { id: 'player-1', name: "host" };
+        const host: Player = { id: 'player-1', name: "host", score: 0 };
         const room = createRoom(host);
 
         // Shouldnt be a copy - exact same.

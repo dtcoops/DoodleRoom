@@ -14,6 +14,9 @@ describe('generateGameState', () => {
       roundEndsAt: null,
       turnOrder: [],
       roundTimer: null,
+      correctGuessers: [],
+      scoresAtRoundStart: {},
+      roundDurationMs: null,
     });
   });
 });

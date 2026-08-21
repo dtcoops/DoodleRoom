@@ -1,11 +1,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import type { Player } from '../types/types';
-import { createRoom } from '../rooms/roomManager';
-import { gameStart, advanceToNextRound, handlePlayerLeftDuringGame, toPublicGameState } from './gameManager';
+import { createRoom, joinRoom, leaveRoom } from '../rooms/roomManager';
+import { gameStart, advanceToNextRound, handlePlayerLeftDuringGame, toPublicGameState, submitGuess } from './gameManager';
 
 describe('Game Manager', () => {
     it('gameStart on a freshly created room with no override', () => {
-        const host: Player = { id: 'player-1', name: "host" };
+        const host: Player = { id: 'player-1', name: "host", score: 0 };
         const room = createRoom(host);
         const beforeStart = Date.now();
 
@@ -22,7 +22,7 @@ describe('Game Manager', () => {
     });
 
     it('gameStart on a freshly created room with an override', () => {
-        const host: Player = { id: 'player-1', name: "daniel" };
+        const host: Player = { id: 'player-1', name: "daniel", score: 0 };
         const room = createRoom(host);
 
         gameStart(room, 3);
@@ -33,9 +33,9 @@ describe('Game Manager', () => {
 
 describe('advanceToNextRound', () => {
     it('advances to the next round and picks the next drawer', () => {
-        const host: Player = { id: 'player-1', name: 'Host' };
+        const host: Player = { id: 'player-1', name: 'Host', score: 0 };
         const room = createRoom(host);
-        room.players.push({ id: 'player-2', name: 'Bob' });
+        room.players.push({ id: 'player-2', name: 'Bob', score: 0 });
         gameStart(room, 2); // 2 total rounds
 
         advanceToNextRound(room);
@@ -46,7 +46,7 @@ describe('advanceToNextRound', () => {
     });
 
     it('transitions to GAME_OVER once all rounds are complete', () => {
-        const host: Player = { id: 'player-1', name: 'Host' };
+        const host: Player = { id: 'player-1', name: 'Host', score: 0  };
         const room = createRoom(host);
         gameStart(room, 1);
 
@@ -55,11 +55,28 @@ describe('advanceToNextRound', () => {
         expect(room.gameState.phase).toBe('GAME_OVER');
         expect(room.gameState.drawerId).toBeNull();
     });
+
+    it('resets correctGuessers and snapshots scores when a new round starts', () => {
+        const host: Player = { id: 'player-1', name: 'Host', score: 0 };
+        const player: Player = { id: 'player-2', name: 'Player', score: 0 };
+        const room = createRoom(host);
+        room.players.push(player);
+        gameStart(room, 2);
+
+        // Simulate round 1 progress: someone guessed, someone scored
+        room.gameState.correctGuessers.push('player-2');
+        player.score = 50;
+
+        advanceToNextRound(room);
+
+        expect(room.gameState.correctGuessers).toEqual([]);
+        expect(room.gameState.scoresAtRoundStart).toEqual({ 'player-1': 0, 'player-2': 50 });
+    });
 });
 
 describe("handlePlayerLeftDuringGame", () => {
     it('Does nothing during WAITING the game state', () => {
-        const host: Player = { id: 'player-1', name: 'Host' };
+        const host: Player = { id: 'player-1', name: 'Host', score: 0  };
         const room = createRoom(host);
 
         handlePlayerLeftDuringGame(room, 'player-1');
@@ -67,7 +84,7 @@ describe("handlePlayerLeftDuringGame", () => {
         expect(room.gameState.turnOrder).toEqual([]);
     });
     it('Does nothing during GAME_OVER the game state', () => {
-        const host: Player = { id: 'player-1', name: 'Host' };
+        const host: Player = { id: 'player-1', name: 'Host', score: 0  };
         const room = createRoom(host);
         gameStart(room, 1); // 1 round max
         advanceToNextRound(room); // triggers end as there was only 1 round
@@ -78,8 +95,8 @@ describe("handlePlayerLeftDuringGame", () => {
         expect(room.gameState.turnOrder).toEqual(turnOrderBefore);
     });
     it('Non-drawing player leaves during DRAWING game state, silently removes player from turn order', () => {
-        const host: Player = { id: 'player-1', name: 'Host' };
-        const player: Player = { id: 'player-2', name: 'Player' };
+        const host: Player = { id: 'player-1', name: 'Host', score: 0  };
+        const player: Player = { id: 'player-2', name: 'Player', score: 0  };
         const room = createRoom(host);
         room.players.push(player);
         gameStart(room, 2);
@@ -88,8 +105,8 @@ describe("handlePlayerLeftDuringGame", () => {
         expect(room.gameState.turnOrder).toEqual(['player-1']);
     });
     it('The drawer leaves during DRAWING game state, should move to next round', () => {
-        const host: Player = { id: 'player-1', name: 'Host' };
-        const player: Player = { id: 'player-2', name: 'Player' };
+        const host: Player = { id: 'player-1', name: 'Host', score: 0  };
+        const player: Player = { id: 'player-2', name: 'Player', score: 0  };
         const room = createRoom(host);
         room.players.push(player);
         gameStart(room, 2);
@@ -102,7 +119,6 @@ describe("handlePlayerLeftDuringGame", () => {
     });
 });
 
-
 describe('round timer', () => {
     beforeEach(() => {
         vi.useFakeTimers();
@@ -113,9 +129,9 @@ describe('round timer', () => {
     });
 
     it('automatically advances to the next round once time runs out', () => {
-        const host: Player = { id: 'player-1', name: 'Host' };
+        const host: Player = { id: 'player-1', name: 'Host', score: 0  };
         const room = createRoom(host);
-        room.players.push({ id: 'player-2', name: 'Player' });
+        room.players.push({ id: 'player-2', name: 'Player', score: 0  });
         gameStart(room, 2);
 
         expect(room.gameState.roundNumber).toBe(1);
@@ -126,9 +142,9 @@ describe('round timer', () => {
     });
 
     it('schedules a new timer for each round', () => {
-        const host: Player = { id: 'player-1', name: 'Host' };
+        const host: Player = { id: 'player-1', name: 'Host', score: 0 };
         const room = createRoom(host);
-        room.players.push({ id: 'player-2', name: 'Player' });
+        room.players.push({ id: 'player-2', name: 'Player', score: 0 });
         gameStart(room, 2);
 
         const firstRoundTimer = room.gameState.roundTimer;
@@ -142,9 +158,9 @@ describe('round timer', () => {
     });
 
     it('does not leave a stale timer behind when advancing rounds', () => {
-        const host: Player = { id: 'player-1', name: 'Host' };
+        const host: Player = { id: 'player-1', name: 'Host', score: 0 };
         const room = createRoom(host);
-        room.players.push({ id: 'player-2', name: 'Bob' });
+        room.players.push({ id: 'player-2', name: 'Bob', score: 0 });
         gameStart(room, 2);
 
         expect(vi.getTimerCount()).toBe(1); // one timer scheduled
@@ -152,5 +168,120 @@ describe('round timer', () => {
         vi.advanceTimersByTime(60_000); // round advances
 
         expect(vi.getTimerCount()).toBe(1); // still just one — old one was cleared, new one scheduled
+    });
+});
+
+describe('submitGuess', () => {
+    it('reject a guess when the game is not in DRAWING phase', () => {
+        const host: Player = { id: 'player-1', name: 'Host', score: 0 };
+        const room = createRoom(host);
+
+        const result = submitGuess(room, 'player-2', 'boat');
+
+        expect(result.status).toBe('rejected');
+        if (result.status === 'rejected') {
+            expect(result.reason).toContain('Drawing Phase has not begun');
+        }
+    });
+
+    it('reject a guess when made by the Drawer', () => {
+        const host: Player = { id: 'player-1', name: 'Host', score: 0 };
+        const room = createRoom(host);
+        gameStart(room);
+
+        const currentWord = room.gameState.currentWord!; // Word is guarenteed
+        const result = submitGuess(room, host.id, currentWord);
+
+        expect(result.status).toBe('rejected');
+        if (result.status === 'rejected') {
+            expect(result.reason).toContain('Drawer can not make guesses');
+        }
+    });
+
+    it('reject a guess if the guessing player has already correctly guessed', () => {
+        const host: Player = { id: 'player-1', name: 'Host', score: 0 };
+        const room = createRoom(host);
+        room.players.push({ id: 'player-2', name: 'player2', score: 0 });
+        gameStart(room);
+
+        // Player guesses correctly
+        const result = submitGuess(room, 'player-2', room.gameState.currentWord!);
+        expect(result.status).toBe('correct');
+
+        // Guess again
+        const resultRepeat = submitGuess(room, 'player-2', room.gameState.currentWord!);
+        expect(resultRepeat.status).toBe('rejected');
+        if (resultRepeat.status === 'rejected') {
+            expect(resultRepeat.reason).toContain(`Player: player-2 has already guessed correctly`);
+        }
+    });
+
+    it('reject a guess as the guessing player is no longer in the room', () => {
+        const host: Player = { id: 'player-1', name: 'Host', score: 0 };
+        const room = createRoom(host);
+        room.players.push({ id: 'player-2', name: 'player2', score: 0 });
+        gameStart(room);
+
+        // Player drops during guess submission
+        leaveRoom(room.roomCode, 'player-2');
+        const result = submitGuess(room, 'player-2', room.gameState.currentWord!);
+        expect(result.status).toBe('rejected');
+        if (result.status === 'rejected') {
+            expect(result.reason).toContain(`Player not found in room`);
+        }
+    });
+
+    it('accept a guess from a player with the incorrect answer', () => {{
+        const host: Player = { id: 'player-1', name: 'Host', score: 0 };
+        const room = createRoom(host);
+        room.players.push({ id: 'player-2', name: 'player2', score: 0 });
+        gameStart(room);
+
+        // Player submits an incorrect guess
+        const result = submitGuess(room, 'player-2', "");
+        expect(result.status).toBe('incorrect');
+    }});
+
+    it('accept a guess from a player with the correct answer', () => {{
+        const host: Player = { id: 'player-1', name: 'Host', score: 0 };
+        const room = createRoom(host);
+        const player: Player = { id: 'player-2', name: 'player2', score: 0 }
+        room.players.push(player);
+        gameStart(room);
+
+        // Player submits a correct guess
+        const result = submitGuess(room, 'player-2', room.gameState.currentWord!);
+        expect(result.status).toBe('correct');
+        if (result.status === 'correct') {
+            // Score is calculated with a time remaining. Should be near 100.
+            expect(result.points).toBeGreaterThanOrEqual(95);
+            expect(result.points).toBeLessThanOrEqual(100);
+        }
+
+        // Player score increases and they are added to correctGuessers
+        expect(player.score).toBe(result.status === 'correct' ? result.points : 0);
+        expect(room.gameState.correctGuessers).toContain('player-2');
+    }});
+
+    it('accept a guess from a player with the correct answer that is case insensitive with white-space', () => {
+        const host: Player = { id: 'player-1', name: 'Host', score: 0 };
+        const room = createRoom(host);
+        const player: Player = { id: 'player-2', name: 'player2', score: 0 }
+        room.players.push(player);
+        gameStart(room);
+
+        // Player submits a correct guess
+        const guess = room.gameState.currentWord!.toUpperCase() + "   ";
+        const result = submitGuess(room, 'player-2', guess);
+        expect(result.status).toBe('correct');
+        if (result.status === 'correct') {
+            // Score is calculated with a time remaining. Should be near 100.
+            expect(result.points).toBeGreaterThanOrEqual(95);
+            expect(result.points).toBeLessThanOrEqual(100);
+        }
+
+        // Player score increases and they are added to correctGuessers
+        expect(player.score).toBe(result.status === 'correct' ? result.points : 0);
+        expect(room.gameState.correctGuessers).toContain('player-2');
     });
 });

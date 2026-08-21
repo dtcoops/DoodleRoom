@@ -1,5 +1,5 @@
 import type { Player, Room } from "../types/types";
-import type { GameState, OnRoundAdvance } from "./types";
+import type { GameState, OnRoundAdvance, GuessResult } from "./types";
 import { generateRandomWord } from "./wordGenerator";
 
 const DEFAULT_ROUND_DURATION_MS = 60_000;
@@ -20,11 +20,20 @@ function getNextDrawerId(room: Room): string {
 function startRound(room: Room, roundDurationMs: number = DEFAULT_ROUND_DURATION_MS) : void {
     clearRoundTimer(room);
 
+    // Core Round State
     room.gameState.phase = 'DRAWING';
     room.gameState.drawerId = getNextDrawerId(room);
     room.gameState.currentWord = generateRandomWord();
     room.gameState.roundEndsAt = Date.now() + roundDurationMs;
+    room.gameState.roundDurationMs = roundDurationMs;
 
+    // Guess tracking
+    room.gameState.correctGuessers = [];
+    room.gameState.scoresAtRoundStart = Object.fromEntries(
+        room.players.map((p) => [p.id, p.score])
+    );
+
+    // Schedule Timer last - depends on above
     room.gameState.roundTimer = setTimeout(() => {
         advanceToNextRound(room);
     }, roundDurationMs);
@@ -86,4 +95,45 @@ export function toPublicGameState(gameState: GameState): Omit<GameState, 'curren
     };
 }
 
+export function submitGuess(room: Room, playerId: string, guessText: string): GuessResult {
+    if (room.gameState.phase !== 'DRAWING') {
+        return { status: 'rejected', reason: "Drawing Phase has not begun" };
+    }
 
+    if (playerId === room.gameState.drawerId) {
+        return { status: 'rejected', reason: "Drawer can not make guesses" };
+    }
+
+    if (room.gameState.correctGuessers.includes(playerId)) {
+        return { status: 'rejected', reason: `Player: ${playerId} has already guessed correctly` };
+    }
+
+    const player = room.players.find((p) => p.id === playerId);
+    if (!player) {
+        return { status: 'rejected', reason: "Player not found in room" };
+    }
+
+    // In the scenario that there is no current word
+    // normalizedWord becomes undefined - no way to match so simply returns incorrect
+    const normalizedGuess = guessText.trim().toLowerCase();
+    const normalizedWord = room.gameState.currentWord?.toLowerCase();
+
+    // Handle the Guess
+    if (normalizedGuess === normalizedWord) {
+        // (1) Compute points
+        const timeRemainingMs = Math.max(0, (room.gameState.roundEndsAt ?? 0) - Date.now());
+        const totalRoundTimeMs = room.gameState.roundDurationMs ?? 1; // avoid divide-by-zero
+        const points = Math.round(100 * (timeRemainingMs / totalRoundTimeMs));
+
+        // (2) update score
+        player.score += points;
+        
+        // (3) add to correctGuessers
+        room.gameState.correctGuessers.push(playerId);
+
+        return  { status: 'correct', points: points };
+    }
+    else {
+        return { status: 'incorrect' };
+    }
+}

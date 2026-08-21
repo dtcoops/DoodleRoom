@@ -7,7 +7,7 @@ import type { Player } from '../../types/types';
 export function registerRoomHandlers(io: Server, socket: Socket, socketRoomMap: Map<string, string>) {
     socket.on('room:create', ({ name }: { name: string }) => {
         try {
-            const host: Player = { id: socket.id, name };
+            const host: Player = { id: socket.id, name, score: 0 };
             const room = createRoom(host);
 
             socket.join(room.roomCode);
@@ -25,7 +25,7 @@ export function registerRoomHandlers(io: Server, socket: Socket, socketRoomMap: 
 
     socket.on('room:join', ({ roomCode, name }: { roomCode: string; name: string }) => {
         try {
-            const player: Player = { id: socket.id, name };
+            const player: Player = { id: socket.id, name, score: 0 };
             const result = joinRoom(roomCode, player);
 
             if (!result.success) {

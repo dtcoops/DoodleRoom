@@ -10,5 +10,8 @@ export function generateGameState(totalRounds: number): GameState {
         roundEndsAt: null,
         turnOrder: [],
         roundTimer: null,
+        correctGuessers: [],
+        scoresAtRoundStart: {},
+        roundDurationMs: null,
     }
 }
