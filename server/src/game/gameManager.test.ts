@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import type { Player } from '../types/types';
 import { createRoom, joinRoom, leaveRoom } from '../rooms/roomManager';
-import { gameStart, advanceToNextRound, handlePlayerLeftDuringGame, toPublicGameState, submitGuess } from './gameManager';
+import { gameStart, advanceToNextRound, handlePlayerLeftDuringGame, toPublicGameState, submitGuess, handleGuessSubmission } from './gameManager';
 
 describe('Game Manager', () => {
     it('gameStart on a freshly created room with no override', () => {
@@ -283,5 +283,34 @@ describe('submitGuess', () => {
         // Player score increases and they are added to correctGuessers
         expect(player.score).toBe(result.status === 'correct' ? result.points : 0);
         expect(room.gameState.correctGuessers).toContain('player-2');
+    });
+});
+
+describe('handleGuessSubmission', () => {
+    it('does not advance the round if eligible guessers remain', () => {
+        const host: Player = { id: 'player-1', name: 'Host', score: 0 };
+        const room = createRoom(host);
+        room.players.push({ id: 'player-2', name: 'p2', score: 0 });
+        room.players.push({ id: 'player-3', name: 'p3', score: 0 });
+        gameStart(room, 3);
+
+        const roundBefore = room.gameState.roundNumber;
+        handleGuessSubmission(room, 'player-2', room.gameState.currentWord!);
+
+        expect(room.gameState.roundNumber).toBe(roundBefore); // player-3 hasn't guessed yet
+    });
+
+    it('advances the round once all eligible guessers have answered correctly', () => {
+        const host: Player = { id: 'player-1', name: 'Host', score: 0 };
+        const room = createRoom(host);
+        room.players.push({ id: 'player-2', name: 'p2', score: 0 });
+        room.players.push({ id: 'player-3', name: 'p3', score: 0 });
+        gameStart(room, 3);
+
+        const word = room.gameState.currentWord!;
+        handleGuessSubmission(room, 'player-2', word);
+        handleGuessSubmission(room, 'player-3', word);
+
+        expect(room.gameState.roundNumber).toBe(2);
     });
 });

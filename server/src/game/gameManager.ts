@@ -137,3 +137,23 @@ export function submitGuess(room: Room, playerId: string, guessText: string): Gu
         return { status: 'incorrect' };
     }
 }
+
+function haveAllGuessersAnsweredCorrectly(room: Room): boolean {
+    const eligibleGuessers = room.gameState.turnOrder.filter((id) => id !== room.gameState.drawerId);
+    return eligibleGuessers.every((id) => room.gameState.correctGuessers.includes(id));
+}
+
+export function handleGuessSubmission(
+    room: Room,
+    playerId: string,
+    guessText: string,
+    onRoundAdvance?: OnRoundAdvance
+): GuessResult {
+    const result = submitGuess(room, playerId, guessText);
+
+    if (result.status === 'correct' && haveAllGuessersAnsweredCorrectly(room)) {
+        advanceToNextRound(room, onRoundAdvance);
+    }
+
+    return result;
+}
