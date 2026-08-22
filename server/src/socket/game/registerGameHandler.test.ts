@@ -324,3 +324,64 @@ describe('game:guess', () => {
         playerSocket.close();
     });
 });
+
+describe('game:returnToLobby', () => {
+    let httpServer: ReturnType<typeof createServer>;
+    let hostSocket: ClientSocket;
+    const PORT = 4004; // make sure it does not use the same as app or other test packages.
+
+    beforeEach(() => {
+        return new Promise<void>((resolve) => {
+            httpServer = createServer();
+            registerSocketHandlers(httpServer); // wires up io on this test server
+            httpServer.listen(PORT, () => {
+                hostSocket = ioClient(`http://localhost:${PORT}`);
+                hostSocket.on('connect', () => resolve());
+            });
+        });
+    });
+    
+    afterEach(() => {
+        hostSocket.close();
+        httpServer.close();
+    });
+
+    it('host ends the game and all players return to lobby with reset scroes', async () => {
+        // Host makes a room
+        const roomCode: string = await new Promise((resolve) => {
+            hostSocket.emit('room:create', { name: 'Host' });
+            hostSocket.once('room:createResult', (result) => resolve(result.room.roomCode));
+        });
+
+        // Second player joins
+        const playerSocket: ClientSocket = ioClient(`http://localhost:${PORT}`);
+        await new Promise<void>((resolve) => playerSocket.on('connect', () => resolve()));
+        await new Promise<void>((resolve) => {
+            playerSocket.emit('room:join', { roomCode, name: 'Player' });
+            playerSocket.once('room:joinResult', () => resolve());
+        });
+
+        // Host starts the gmae
+        const word: string = await new Promise((resolve) => {
+            hostSocket.emit('game:start', {});
+            hostSocket.once('game:word', (payload) => resolve(payload.word));
+        });
+
+        // wait for playerSocket's own copy of the game:start broadcast to arrive
+        // race condition with game:state in the next broadcast
+        await new Promise<void>((resolve) => playerSocket.once('game:state', () => resolve()));
+
+        const resultPromise = new Promise((resolve) => hostSocket.once('game:returnToLobbyResult', resolve));
+        const statePromise = new Promise((resolve) => playerSocket.once('game:state', resolve));
+
+        hostSocket.emit('game:returnToLobby', {});
+
+        const [result, publicState]: [any, any] = await Promise.all([resultPromise, statePromise]);
+
+        expect(result.success).toBe(true);
+        expect(publicState.phase).toBe('WAITING');
+
+        playerSocket.close();
+    });
+
+});

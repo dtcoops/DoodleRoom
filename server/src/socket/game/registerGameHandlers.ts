@@ -1,5 +1,5 @@
 import { Server, Socket } from 'socket.io';
-import { gameStart, handleGuessSubmission } from '../../game/gameManager';
+import { gameStart, handleGuessSubmission, returnToLobby } from '../../game/gameManager';
 import { getRoom } from '../../rooms/roomManager';
 import { broadcastRoundState } from './broadcastRoundState';
 
@@ -78,6 +78,31 @@ export function registerGameHandlers(io: Server, socket: Socket, socketRoomMap: 
             }
         } catch (error) {
             console.error('Failed to submit guess:', error);
+        }
+    });
+
+    socket.on('game:returnToLobby', () => {
+        try {
+            const roomCode = socketRoomMap.get(socket.id);
+            if (!roomCode) {
+                return;
+            }
+            const room = getRoom(roomCode);
+            if (!room) {
+                return;   
+            }
+
+            if (socket.id !== room.hostId) {
+                socket.emit('game:returnToLobbyResult', { success: false, reason: 'Only the host can end the game early' });
+                return;
+            }
+
+            returnToLobby(room)
+            broadcastRoundState(io, room);
+            
+            socket.emit('game:returnToLobbyResult', { success: true });
+        } catch (error) {
+            console.error('Failed to return to lobby:', error);
         }
     });
 }

@@ -1,6 +1,7 @@
 import type { Player, Room } from "../types/types";
 import type { GameState, OnRoundAdvance, GuessResult } from "./types";
 import { generateRandomWord } from "./wordGenerator";
+import { generateGameState } from "./gameState";
 
 const DEFAULT_ROUND_DURATION_MS = 60_000;
 
@@ -76,6 +77,12 @@ export function advanceToNextRound(room: Room, onRoundAdvance?: OnRoundAdvance):
     }
 
     onRoundAdvance?.(room);
+}
+
+export function returnToLobby(room: Room): void {
+    clearRoundTimer(room);
+    room.gameState = generateGameState(room.players.length);
+    room.players.forEach((p) => { p.score = 0; });
 }
 
 function removeFromTurnOrder(room: Room, playerId: string): void {

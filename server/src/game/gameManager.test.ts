@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import type { Player } from '../types/types';
 import { createRoom, joinRoom, leaveRoom } from '../rooms/roomManager';
-import { gameStart, advanceToNextRound, handlePlayerLeftDuringGame, toPublicGameState, submitGuess, handleGuessSubmission } from './gameManager';
+import { gameStart, advanceToNextRound, handlePlayerLeftDuringGame, returnToLobby, submitGuess, handleGuessSubmission } from './gameManager';
 
 describe('Game Manager', () => {
     
@@ -41,6 +41,23 @@ describe('Game Manager', () => {
         gameStart(room, 3);
         
         expect(room.gameState.totalRounds).toBe(3);
+    });
+
+    it('resets the game back to a fresh WAITING lobby, clearing scores and the timer', () => {
+        const host: Player = { id: 'player-1', name: 'Host', score: 0 };
+        const room = createRoom(host);
+        room.players.push({ id: 'player-2', name: 'p2', score: 0 });
+        gameStart(room, 1);
+
+        // simulate someone having scored
+        room.players[0].score = 50;
+
+        returnToLobby(room);
+
+        expect(room.gameState.phase).toBe('WAITING');
+        expect(room.gameState.roundTimer).toBeNull();
+        expect(room.players[0].score).toBe(0);
+        expect(room.players[1].score).toBe(0);
     });
 });
 
