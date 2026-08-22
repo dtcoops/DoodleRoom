@@ -39,12 +39,18 @@ function startRound(room: Room, roundDurationMs: number = DEFAULT_ROUND_DURATION
     }, roundDurationMs);
 }
 
-export function gameStart(room: Room, totalRoundsOverride?: number, onRoundAdvance?: OnRoundAdvance): void {
+export function gameStart(room: Room, totalRoundsOverride?: number, onRoundAdvance?: OnRoundAdvance): { success: true } | { success: false; reason: string } {
+    if (room.players.length < 2) {
+        return { success: false, reason: 'At least 2 players are required to start.' };
+    }
+
     room.gameState.totalRounds = totalRoundsOverride ?? room.players.length;
     room.gameState.roundNumber = 1;
     room.gameState.turnOrder = room.players.map((p) => p.id);
     startRound(room);
     onRoundAdvance?.(room);
+
+    return { success: true };
 }
 
 export function clearRoundTimer(room: Room): void {

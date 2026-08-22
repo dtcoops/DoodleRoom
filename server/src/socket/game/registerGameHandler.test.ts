@@ -53,7 +53,7 @@ describe('toPublicGameState', () => {
     });
 });
 
-describe('Room Socket Handlers', () => {
+describe('game:start', () => {
     let httpServer: ReturnType<typeof createServer>;
     let hostSocket: ClientSocket;
     const PORT = 4004; // make sure it does not use the same as app or other test packages.
@@ -114,6 +114,20 @@ describe('Room Socket Handlers', () => {
                 });
             })
         })
+    });
+
+    it('rejects game:start when there are fewer than 2 players', async () => {
+        const roomCode: string = await new Promise((resolve) => {
+            hostSocket.emit('room:create', { name: 'Host' });
+            hostSocket.once('room:createResult', (result) => resolve(result.room.roomCode));
+        });
+
+        const result: any = await new Promise((resolve) => {
+            hostSocket.once('game:startResult', resolve);
+            hostSocket.emit('game:start', {});
+        });
+
+        expect(result.success).toBe(false);
     });
 });
 

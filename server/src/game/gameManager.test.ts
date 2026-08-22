@@ -4,9 +4,11 @@ import { createRoom, joinRoom, leaveRoom } from '../rooms/roomManager';
 import { gameStart, advanceToNextRound, handlePlayerLeftDuringGame, toPublicGameState, submitGuess, handleGuessSubmission } from './gameManager';
 
 describe('Game Manager', () => {
+    
     it('gameStart on a freshly created room with no override', () => {
         const host: Player = { id: 'player-1', name: "host", score: 0 };
         const room = createRoom(host);
+        room.players.push({ id: 'player-2', name: 'player2', score: 0 });
         const beforeStart = Date.now();
 
         gameStart(room);
@@ -14,16 +16,27 @@ describe('Game Manager', () => {
         expect(room.gameState.phase).toBe('DRAWING');
         expect(room.gameState.drawerId).toBe('player-1');
         expect(room.gameState.roundNumber).toBe(1);
-        expect(room.gameState.totalRounds).toBe(1);
+        expect(room.gameState.totalRounds).toBe(2);
         expect(room.gameState.currentWord).not.toBeNull();
         expect(room.gameState.roundEndsAt).toBeGreaterThan(beforeStart);
-        expect(room.gameState.turnOrder).toEqual(['player-1']);
+        expect(room.gameState.turnOrder).toEqual(['player-1', 'player-2']);
 
+    });
+
+    it('gameStart requires a minimum of 2 players', () => {
+        const host: Player = { id: 'player-1', name: "host", score: 0 };
+        const room = createRoom(host);
+        const beforeStart = Date.now();
+
+        const result = gameStart(room);
+        expect(result.success).toBe(false);
+        expect(room.gameState.phase).toBe('WAITING');
     });
 
     it('gameStart on a freshly created room with an override', () => {
         const host: Player = { id: 'player-1', name: "daniel", score: 0 };
         const room = createRoom(host);
+        room.players.push({ id: 'player-2', name: 'player2', score: 0 });
 
         gameStart(room, 3);
         
@@ -48,6 +61,7 @@ describe('advanceToNextRound', () => {
     it('transitions to GAME_OVER once all rounds are complete', () => {
         const host: Player = { id: 'player-1', name: 'Host', score: 0  };
         const room = createRoom(host);
+        room.players.push({ id: 'player-2', name: 'Bob', score: 0 });
         gameStart(room, 1);
 
         advanceToNextRound(room);
@@ -187,6 +201,8 @@ describe('submitGuess', () => {
     it('reject a guess when made by the Drawer', () => {
         const host: Player = { id: 'player-1', name: 'Host', score: 0 };
         const room = createRoom(host);
+        room.players.push({ id: 'player-2', name: 'player2', score: 0 });
+        
         gameStart(room);
 
         const currentWord = room.gameState.currentWord!; // Word is guarenteed

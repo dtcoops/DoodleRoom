@@ -20,9 +20,16 @@ export function registerGameHandlers(io: Server, socket: Socket, socketRoomMap: 
                 return;
             }
 
-            gameStart(room, totalRounds, (updatedRoom) => {
+            const result = gameStart(room, totalRounds, (updatedRoom) => {
                 broadcastRoundState(io, updatedRoom);
             });
+
+            if (!result.success) {
+                socket.emit('game:startResult', result);
+                return;
+            }
+            
+            socket.emit('game:startResult', { success: true });
         } catch (error) {
             console.error('Failed to start game:', error);
         }
