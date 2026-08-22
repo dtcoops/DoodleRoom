@@ -5,20 +5,46 @@ sketching a secret word on a shared canvas while others race to guess it.
 
 ## Status
 
-In progress — early development.
+In progress — backend complete and fully tested, frontend in development.
 
-## Planned Stack
+## Stack
 
 - **Frontend:** React, TypeScript, Vite
 - **Backend:** Express, TypeScript, Socket.IO
-- **Realtime:** WebSockets for canvas sync and game state
+- **Testing:** Vitest (unit + real-socket integration tests)
 
-## Planned Features
+## Backend Features (Complete)
 
-- [ ] Create/join game rooms by code
-- [ ] Turn-based drawing with a live-synced canvas
-- [ ] Real-time guessing with score tracking
-- [ ] Round timer and word reveal
+- [x] Room creation/joining/leaving with host reassignment
+- [x] Full game state machine (waiting → drawing → round-end → game-over)
+- [x] Turn rotation with server-authoritative timers
+- [x] Time-weighted scoring on correct guesses
+- [x] Word secrecy — only the current drawer ever receives the word
+- [x] Phase-aware drawing authorization (free doodling in the lobby, drawer-only during rounds)
+- [x] Host controls: minimum player enforcement, return-to-lobby / play again
+
+## Frontend Features (In Progress)
+
+- [ ] Create/join lobby screen with free-for-all doodling
+- [ ] Player and drawing segments color coded for lobby
+- [ ] Live game screen (turn state, timer, scoreboard)
+- [ ] Synced drawing canvas
+- [ ] Guess input and live guess feed
+
+## Future Extensions
+
+Deliberately scoped out for now, with reasoning:
+
+- **Reconnection handling** — a dropped connection currently can't rejoin an
+  active game. Given these are short, casual sessions, players can simply
+  return to the lobby rather than needing full session recovery.
+- **Drawing gallery / replay** — the server doesn't currently persist strokes;
+  I had debated a highlights reel on game completion to be shown with scores. This
+  is not a core feature, is only a nice to have for someone who actually finishes
+  a game, and would need meaningful changes for new server-side storage.
+- **React Native client** — the game logic and canvas component are designed
+  deliberately to be kept decoupled from socket/state code specifically to make a
+  future mobile port (React Native + a native canvas library) straightforward.
 
 ## Running Locally
 
@@ -29,3 +55,7 @@ _Instructions coming soon._
 A learning project to explore real-time systems (WebSockets, 
 server-authoritative game state) — intended as a stepping stone toward 
 game development, alongside my interest in fullstack web work.
+
+Backend was deliberately over-built relative to a typical school project, with 
+full unit and integration test coverage throughout, as a demonstration 
+of testing discipline in a real-time, stateful system.
