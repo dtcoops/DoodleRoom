@@ -346,14 +346,12 @@ describe('game:returnToLobby', () => {
         httpServer.close();
     });
 
-    it('host ends the game and all players return to lobby with reset scroes', async () => {
-        // Host makes a room
+    it('host ends the game and all players return to lobby with reset scores', async () => {
         const roomCode: string = await new Promise((resolve) => {
             hostSocket.emit('room:create', { name: 'Host' });
             hostSocket.once('room:createResult', (result) => resolve(result.room.roomCode));
         });
 
-        // Second player joins
         const playerSocket: ClientSocket = ioClient(`http://localhost:${PORT}`);
         await new Promise<void>((resolve) => playerSocket.on('connect', () => resolve()));
         await new Promise<void>((resolve) => {
@@ -361,25 +359,64 @@ describe('game:returnToLobby', () => {
             playerSocket.once('room:joinResult', () => resolve());
         });
 
-        // Host starts the gmae
+        const player2Socket: ClientSocket = ioClient(`http://localhost:${PORT}`);
+        await new Promise<void>((resolve) => player2Socket.on('connect', () => resolve()));
+        await new Promise<void>((resolve) => {
+            player2Socket.emit('room:join', { roomCode, name: 'Player' });
+            player2Socket.once('room:joinResult', () => resolve());
+        });
+
         const word: string = await new Promise((resolve) => {
             hostSocket.emit('game:start', {});
             hostSocket.once('game:word', (payload) => resolve(payload.word));
         });
 
-        // wait for playerSocket's own copy of the game:start broadcast to arrive
-        // race condition with game:state in the next broadcast
-        await new Promise<void>((resolve) => playerSocket.once('game:state', () => resolve()));
+        await new Promise<void>((resolve) => {
+            playerSocket.once('game:guessResult', () => resolve());
+            playerSocket.emit('game:guess', { text: word });
+        });
 
-        const resultPromise = new Promise((resolve) => hostSocket.once('game:returnToLobbyResult', resolve));
-        const statePromise = new Promise((resolve) => playerSocket.once('game:state', resolve));
+        // Filters for the specific WAITING broadcast — no manual draining needed,
+        // regardless of how many other game:state events arrived first.
+        const statePromise: Promise<any> = new Promise((resolve) => {
+            playerSocket.on('game:state', (state) => {
+                if (state.phase === 'WAITING') resolve(state);
+            });
+        });
+
+        const resultPromise: Promise<any> = new Promise((resolve) => hostSocket.once('game:returnToLobbyResult', resolve));
 
         hostSocket.emit('game:returnToLobby', {});
 
-        const [result, publicState]: [any, any] = await Promise.all([resultPromise, statePromise]);
+        const [result, publicState] = await Promise.all([resultPromise, statePromise]);
 
         expect(result.success).toBe(true);
         expect(publicState.phase).toBe('WAITING');
+        expect(publicState.players.every((p: any) => p.score === 0)).toBe(true);
+
+        playerSocket.close();
+        player2Socket.close();
+    });
+
+    it('rejects game:returnToLobby from a non-host player', async () => {
+        const roomCode: string = await new Promise((resolve) => {
+            hostSocket.emit('room:create', { name: 'Host' });
+            hostSocket.once('room:createResult', (result) => resolve(result.room.roomCode));
+        });
+
+        const playerSocket: ClientSocket = ioClient(`http://localhost:${PORT}`);
+        await new Promise<void>((resolve) => playerSocket.on('connect', () => resolve()));
+        await new Promise<void>((resolve) => {
+            playerSocket.emit('room:join', { roomCode, name: 'Player' });
+            playerSocket.once('room:joinResult', () => resolve());
+        });
+
+        const result: any = await new Promise((resolve) => {
+            playerSocket.once('game:returnToLobbyResult', resolve);
+            playerSocket.emit('game:returnToLobby', {});
+        });
+
+        expect(result.success).toBe(false);
 
         playerSocket.close();
     });
