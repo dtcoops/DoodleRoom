@@ -53,9 +53,11 @@ _Instructions coming soon._
 ## Why I'm Building This
 
 A learning project to explore real-time systems (WebSockets, 
-server-authoritative game state) — intended as a stepping stone toward 
-game development, alongside my interest in fullstack web work.
+server-authoritative game state); a fullstack web project built 
+around the specific challenge of online multiplayer game architecture: 
+state machines, turn management, and real-time synchronization.
 
-Backend was deliberately over-built relative to a typical school project, with 
-full unit and integration test coverage throughout, as a demonstration 
-of testing discipline in a real-time, stateful system.
+The backend includes full unit and integration test coverage throughout — 
+rooms, game state, scoring, and drawing are all tested at both the logic 
+and real-socket level. I did this deliberately since disciplined testing 
+is a skill I wanted to actually practice and demonstrate, not just claim.
