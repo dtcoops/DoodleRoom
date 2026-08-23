@@ -1,0 +1,69 @@
+.mainPage {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    width: 80vw;
+    align-self: center;
+}
+
+.logo {
+    height: 300px;
+    width: 300px;
+}
+
+
+.form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 50vh;
+    justify-content: center;
+}
+
+.form button {
+    padding: 10px 20px;
+    margin: 10px 8px;
+    border-radius: 8px;
+    border: 2px solid white;
+    background: white;
+    color: var( #495fbd);
+    font-weight: 600;
+    cursor: pointer;
+}
+
+
+.form input {
+    padding: 10px 14px;
+    margin: 0 4px;
+    border-radius: 8px;
+    border: none;
+    font-size: 1rem;
+    outline: none;
+}
+
+.form input::placeholder {
+    color: #888;
+}
+
+.form input:focus {
+    box-shadow: 0 0 0 2px var(--accent, #495fbd);
+}
+
+.inputGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.inputGroup input {
+    width: 240px;
+}
+
+.buttonGroup {
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+}

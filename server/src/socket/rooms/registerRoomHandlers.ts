@@ -7,6 +7,12 @@ import type { Player } from '../../types/types';
 export function registerRoomHandlers(io: Server, socket: Socket, socketRoomMap: Map<string, string>) {
     socket.on('room:create', ({ name }: { name: string }) => {
         try {
+             const trimmedName = name?.trim();
+            if (!trimmedName) {
+                socket.emit('room:createResult', { success: false, reason: 'A name is required.' });
+                return;
+            }
+
             const host: Player = { id: socket.id, name, score: 0 };
             const room = createRoom(host);
 

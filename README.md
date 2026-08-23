@@ -61,3 +61,9 @@ The backend includes full unit and integration test coverage throughout —
 rooms, game state, scoring, and drawing are all tested at both the logic 
 and real-socket level. I did this deliberately since disciplined testing 
 is a skill I wanted to actually practice and demonstrate, not just claim.
+
+
+## attribution
+
+working logo
+https://www.svgrepo.com/svg/166383/edit-hand-drawn-interface-symbol
