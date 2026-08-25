@@ -47,10 +47,9 @@ Deliberately scoped out for now, with reasoning:
   future mobile port (React Native + a native canvas library) straightforward.
 - **Late-joiner sync** — a player joining mid-round doesn't see strokes or
   chat messages sent before they connected, since neither is persisted
-  server-side. Consistent with the drawing/chat design above; would need
-  the same kind of server-side history this project deliberately avoided
-  for a short, casual game. This only affects lobby doodles and chat prior
-  to the game, assuming the host does not start the game until all friends have joined.
+  server-side. Would need the server-side history mentioned with Drawing Gallery
+  for this to function. This *tentatively* only affects lobby doodles and chat prior
+  to the game, on the assumption that the host does not start the game until all friends have joined.
 - **Cross-device canvas edge cases** — the canvas correctly scales and
   stays proportionally correct across differently-sized windows, but
   extreme aspect-ratio changes (e.g. resizing mid-round from very wide
