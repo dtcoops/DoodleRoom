@@ -45,6 +45,18 @@ Deliberately scoped out for now, with reasoning:
 - **React Native client** — the game logic and canvas component are designed
   deliberately to be kept decoupled from socket/state code specifically to make a
   future mobile port (React Native + a native canvas library) straightforward.
+- **Late-joiner sync** — a player joining mid-round doesn't see strokes or
+  chat messages sent before they connected, since neither is persisted
+  server-side. Consistent with the drawing/chat design above; would need
+  the same kind of server-side history this project deliberately avoided
+  for a short, casual game. This only affects lobby doodles and chat prior
+  to the game, assuming the host does not start the game until all friends have joined.
+- **Cross-device canvas edge cases** — the canvas correctly scales and
+  stays proportionally correct across differently-sized windows, but
+  extreme aspect-ratio changes (e.g. resizing mid-round from very wide
+  to very narrow) or browser zoom can cause minor, known visual
+  artifacts. Not addressed, given how rare these interactions are
+  during actual gameplay.
 
 ## Running Locally
 
