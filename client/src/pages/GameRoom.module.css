@@ -41,6 +41,16 @@
     cursor: pointer;
 }
 
+.buttonLeave {
+    padding: 10px 20px;
+    border-radius: 8px;
+    border: 2px solid white;
+    background: white;
+    color: #495fbd;
+    font-weight: 600;
+    cursor: pointer;
+}
+
 .chatPanel {
     display: flex;
     flex-direction: column;

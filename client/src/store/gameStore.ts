@@ -21,6 +21,7 @@ interface GameStore {
     sendChat: (text: string) => void;
     clearError: () => void;
     returnToLobby: () => void;
+    leaveRoom: () => void;
     startGame: () => void;
 }
 
@@ -32,6 +33,10 @@ type CreateResult =
   | { success: true; room: Room }
   | { success: false; reason: string };
 
+type LeaveResult =
+  | { success: true; room: Room }
+  | { success: false; reason: string };
+
 export type GuessResult =
   | { status: 'correct'; points: number }
   | { status: 'incorrect' }
@@ -39,7 +44,7 @@ export type GuessResult =
 
 // The store is the only connection point between socket events and React state
 // Client wants to perform an action, server decides the result, client is updated asynchronously
-export const useGameStore = create<GameStore>((set) => ({
+export const useGameStore = create<GameStore>((set, get) => ({
     connected: false,
     room: null,
     you: null,
@@ -68,6 +73,13 @@ export const useGameStore = create<GameStore>((set) => ({
         socket.emit('game:start', {});
     },
     clearError: () => set({ errorMessage: null }),
+    leaveRoom: () => {
+        const roomCode = get().room?.roomCode;
+        if (!roomCode) {
+            return;
+        }
+        socket.emit('room:leave', { roomCode });
+    }
 }));
 
 socket.on('connect', () => 
@@ -107,23 +119,34 @@ socket.on('room:playerJoined', ({ player }) => {
     });
 });
 
-socket.on('room:playerLeft', ({ playerId }) => {
+socket.on('room:playerLeft', ({ playerId, hostId }: { playerId: string; hostId: string }) => {
     useGameStore.setState((s) => {
         if (!s.room) return {};
 
         const leavingPlayer = s.room.players.find((p) => p.id === playerId);
         const updatedPlayers = s.room.players.filter((p) => p.id !== playerId);
+        const hostChanged = s.room.hostId !== hostId;
 
-        const entry: LogEntry = {
-            type: 'system',
-            message: `${leavingPlayer?.name ?? 'A player'}: left the room`,
-        };
+        const entries: LogEntry[] = [
+            { type: 'system', message: `${leavingPlayer?.name ?? 'A player'}: left the room` },
+        ];
+
+        if (hostChanged) {
+            const newHost = updatedPlayers.find((p) => p.id === hostId);
+            entries.push({ type: 'system', message: `${newHost?.name ?? 'Someone'}: is now the host` });
+        }
 
         return {
-            room: { ...s.room, players: updatedPlayers },
-            roomLog: [...s.roomLog, entry],
+            room: { ...s.room, players: updatedPlayers, hostId },
+            roomLog: [...s.roomLog, ...entries],
         };
     });
+});
+
+socket.on('room:leaveResult', (result: LeaveResult) => {
+    if (result.success) {
+        useGameStore.setState({ room: null, you: null, roomLog: [] });
+    }
 });
 
 socket.on('room:chatMessage', (payload: { playerName: string; text: string }) => {

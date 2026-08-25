@@ -75,7 +75,7 @@ export function registerRoomHandlers(io: Server, socket: Socket, socketRoomMap: 
             }
 
             socket.emit('room:leaveResult', result);
-            socket.to(roomCode).emit('room:playerLeft', { playerId: socket.id });
+            socket.to(roomCode).emit('room:playerLeft', { playerId: socket.id, hostId: result.room.hostId });
         } catch (error) {
             console.error('Failed to leave room:', error);
         }
@@ -125,7 +125,7 @@ export function registerRoomHandlers(io: Server, socket: Socket, socketRoomMap: 
                     broadcastRoundState(io, updatedRoom);
                 });
             }
-            socket.to(roomCode).emit('room:playerLeft', { playerId: socket.id });
+            socket.to(roomCode).emit('room:playerLeft', { playerId: socket.id, hostId: result.room.hostId });
         } catch (error) {
             console.error(error)
         }

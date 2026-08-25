@@ -13,6 +13,7 @@ export function GameRoom() {
     const you = useGameStore((s) => s.you);
     const returnToLobby = useGameStore((s) => s.returnToLobby);
     const startGame = useGameStore((s) => s.startGame);
+    const leaveRoom = useGameStore((s) => s.leaveRoom);
     const currentWord = useGameStore((s) => s.currentWord);
     const [incomingSegments, setIncomingSegments] = useState<DrawSegment[]>([]);
     const [clearSignal, setClearSignal] = useState(0);
@@ -108,6 +109,7 @@ export function GameRoom() {
                     <div className={styles.buttonSlot}>
                         {isHost && <button onClick={() => returnToLobby()}>End Game</button>}
                     </div>
+                    <button className={styles.buttonLeave} onClick={() => leaveRoom()}>Leave Room</button>
                 </div>
                 <ChatWindow shouldSendAsGuess={shouldSendAsGuess} />
             </div>
