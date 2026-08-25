@@ -1,16 +1,27 @@
 import { create } from 'zustand';
 import { socket } from '../socket';
-import type { Player, Room } from '../types/types';
+import type { Player, Room, ClientGameState } from '../types/types';
+
+export type LogEntry =
+    | { type: 'system'; message: string }
+    | { type: 'chat'; playerName: string; text: string }
+    | { type: 'guess'; playerId: string; playerName: string; text?: string; correct: boolean };
 
 interface GameStore {
     connected: boolean;
     room: Room | null;
     you: Player | null;
     errorMessage: string | null; // most recent error to be shown to client
+    roomLog: LogEntry[];
+    currentWord: string | null
 
     createRoom: (name: string) => void;
     joinRoom: (roomCode: string, name: string) => void;
+    submitGuess: (text: string) => void;
+    sendChat: (text: string) => void;
     clearError: () => void;
+    returnToLobby: () => void;
+    startGame: () => void;
 }
 
 type JoinResult =
@@ -21,6 +32,11 @@ type CreateResult =
   | { success: true; room: Room }
   | { success: false; reason: string };
 
+export type GuessResult =
+  | { status: 'correct'; points: number }
+  | { status: 'incorrect' }
+  | { status: 'rejected'; reason: string };
+
 // The store is the only connection point between socket events and React state
 // Client wants to perform an action, server decides the result, client is updated asynchronously
 export const useGameStore = create<GameStore>((set) => ({
@@ -28,6 +44,9 @@ export const useGameStore = create<GameStore>((set) => ({
     room: null,
     you: null,
     errorMessage: null,
+    roomLog: [],
+    currentWord: null,
+
     createRoom: (name) => {
         socket.connect();
         socket.emit('room:create', { name });
@@ -35,6 +54,18 @@ export const useGameStore = create<GameStore>((set) => ({
     joinRoom: (roomCode, name) => {
         socket.connect();
         socket.emit('room:join', { roomCode, name });
+    },
+    submitGuess: (text) => {
+        socket.emit('game:guess', { text });
+    },
+    sendChat: (text: string) => {
+        socket.emit('room:chat', { text });
+    },
+    returnToLobby: () => {
+        socket.emit('game:returnToLobby', {})
+    },
+    startGame: () => {
+        socket.emit('game:start', {});
     },
     clearError: () => set({ errorMessage: null }),
 }));
@@ -66,11 +97,80 @@ socket.on('room:joinResult', (result: JoinResult) => {
 });
 
 socket.on('room:playerJoined', ({ player }) => {
-    useGameStore.setState((s) => s.room ? { room: { ...s.room, players: [...s.room.players, player] } } : {});
+    useGameStore.setState((s): Partial<GameStore> => {
+        if (!s.room) return {};
+        const entry: LogEntry = { type: 'system', message: `${player.name}: connected to room` };
+        return {
+            room: { ...s.room, players: [...s.room.players, player] },
+            roomLog: [...s.roomLog, entry],
+        };
+    });
 });
 
 socket.on('room:playerLeft', ({ playerId }) => {
-    useGameStore.setState((s) => s.room ? {
-        room: { ...s.room, players: s.room.players.filter((p) => p.id !== playerId) }
-    } : {});
+    useGameStore.setState((s) => {
+        if (!s.room) return {};
+
+        const leavingPlayer = s.room.players.find((p) => p.id === playerId);
+        const updatedPlayers = s.room.players.filter((p) => p.id !== playerId);
+
+        const entry: LogEntry = {
+            type: 'system',
+            message: `${leavingPlayer?.name ?? 'A player'}: left the room`,
+        };
+
+        return {
+            room: { ...s.room, players: updatedPlayers },
+            roomLog: [...s.roomLog, entry],
+        };
+    });
+});
+
+socket.on('room:chatMessage', (payload: { playerName: string; text: string }) => {
+    useGameStore.setState((s) => {
+        const entry: LogEntry = { type: 'chat', ...payload };
+        return { roomLog: [...s.roomLog, entry] };
+    });
+});
+
+socket.on('game:guessResult', (result: GuessResult) => {
+    if (result.status === 'rejected') {
+        useGameStore.setState({ errorMessage: result.reason });
+    } 
+});
+
+socket.on('game:guessBroadcast', (payload: { playerId: string; playerName: string; text?: string; correct: boolean }) => {
+    useGameStore.setState((s) => {
+        const entry: LogEntry = { type: 'guess', ...payload };
+        return { roomLog: [...s.roomLog, entry] };
+    });
+});
+
+socket.on('game:state', (gameState: ClientGameState) => {
+    useGameStore.setState((s) => {
+        const isNewRound = s.room?.gameState.roundNumber !== gameState.roundNumber;
+        
+        if (!s.room) return {};
+        
+        return {
+            room: { ...s.room, gameState },
+            roomLog: isNewRound ? [] : s.roomLog,
+        };
+    });
+});
+
+socket.on('game:returnToLobbyResult', (result: { success: boolean; reason?: string }) => {
+    if (!result.success) {
+        useGameStore.setState({ errorMessage: result.reason ?? 'Failed to return to lobby.' });
+    }
+});
+
+socket.on('game:startResult', (result: { success: boolean; reason?: string }) => {
+    if (!result.success) {
+        useGameStore.setState({ errorMessage: result.reason ?? 'Failed to start game.' });
+    }
+});
+
+socket.on('game:word', ({ word }: { word: string }) => {
+    useGameStore.setState({ currentWord: word });
 });

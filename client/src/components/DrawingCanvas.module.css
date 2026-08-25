@@ -1,0 +1,7 @@
+.drawingCanvas {
+    background: white;
+    border: 8px solid #8f7554;
+    min-width: 0;
+    min-height: 0;
+    margin: 60px;
+}

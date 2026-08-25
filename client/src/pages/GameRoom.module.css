@@ -1,0 +1,83 @@
+.mainPage {
+    display: flex;
+    flex-direction: row;
+    height: 90vh;
+    width: 100vw;
+}
+
+.canvasWrapper {
+    flex: 1;
+    position: relative;
+    display: flex;
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+.wordPill {
+    position: absolute;
+    top: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: white;
+    border-radius: 999px;
+    padding: 8px 24px;
+    font-weight: 700;
+    font-size: 1.3rem;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    z-index: 1;
+}
+
+.clearButton {
+    position: absolute;
+    bottom: -40px;
+    right: 80px;
+    z-index: 1;
+    padding: 10px 20px;
+    border-radius: 8px;
+    border: 2px solid #495fbd;
+    background: white;
+    color: #495fbd;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.chatPanel {
+    display: flex;
+    flex-direction: column;
+    margin: 16px 32px 32px 0px;
+    height: 93.5vh;
+    width: 20vw;
+}
+
+.roomInfo {
+    padding-top: 16px;
+    text-align: center;
+    font-size: 1.3rem;
+    color: white;
+    font-weight: 600;
+}
+
+.roomInfo strong {
+    color: #ffd166;
+}
+
+.controls {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    padding: 8px 0;
+}
+
+.controls button {
+    padding: 10px 20px;
+    border-radius: 8px;
+    border: 2px solid white;
+    background: white;
+    color: #495fbd;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.buttonSlot {
+    width: 100px;
+}

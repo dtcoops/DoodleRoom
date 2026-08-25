@@ -2,6 +2,7 @@ import { Server, Socket } from 'socket.io';
 import { createRoom, joinRoom, leaveRoom } from '../../rooms/roomManager';
 import { handlePlayerLeftDuringGame, clearRoundTimer } from '../../game/gameManager';
 import { broadcastRoundState } from '../game/broadcastRoundState';
+import { getRoom } from '../../rooms/roomManager';
 import type { Player } from '../../types/types';
 
 export function registerRoomHandlers(io: Server, socket: Socket, socketRoomMap: Map<string, string>) {
@@ -77,6 +78,29 @@ export function registerRoomHandlers(io: Server, socket: Socket, socketRoomMap: 
             socket.to(roomCode).emit('room:playerLeft', { playerId: socket.id });
         } catch (error) {
             console.error('Failed to leave room:', error);
+        }
+    });
+
+    socket.on('room:chat', ({ text }: { text: string }) => {
+        try {
+            const roomCode = socketRoomMap.get(socket.id);
+            if (!roomCode) return;
+
+            const room = getRoom(roomCode);
+            if (!room) return;
+
+            const player = room.players.find((p) => p.id === socket.id);
+            if (!player) return;
+
+            const trimmedText = text?.trim();
+            if (!trimmedText) return;
+
+            io.to(roomCode).emit('room:chatMessage', {
+                playerName: player.name,
+                text: trimmedText,
+            });
+        } catch (error) {
+            console.error('Failed to send chat message:', error);
         }
     });
 

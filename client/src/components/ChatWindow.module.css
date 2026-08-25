@@ -1,0 +1,46 @@
+.chatWindow {
+    background: #f4f3ec;
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    padding: 12px;
+    box-sizing: border-box;
+    gap: 8px;
+}
+
+.log {
+    flex: 1;
+    overflow-y: auto;
+    border-radius: 8px;
+    background-color: var(--code-bg);
+    padding: 12px;
+    text-align: left;
+}
+
+.log > div {
+    margin-bottom: 6px;
+}
+
+.inputRow {
+    display: flex;
+    gap: 8px;
+}
+
+.inputRow input {
+    padding: 10px 12px;
+    font-size: 1rem;
+}
+
+.inputRow button {
+    padding: 10px 20px;
+    border-radius: 8px;
+    border: 2px solid white;
+    background: white;
+    color: #495fbd;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.buttonSlot {
+    width: 100px;
+}
