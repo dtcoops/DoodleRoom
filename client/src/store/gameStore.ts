@@ -171,13 +171,25 @@ socket.on('game:guessBroadcast', (payload: { playerId: string; playerName: strin
 
 socket.on('game:state', (gameState: ClientGameState) => {
     useGameStore.setState((s) => {
-        const isNewRound = s.room?.gameState.roundNumber !== gameState.roundNumber;
-        
-        if (!s.room) return {};
-        
+        if (!s.room) {
+            return {};
+        }
+
+        const oldPhase = s.room.gameState.phase;
+        const newPhase = gameState.phase;
+        const isNewRound = s.room.gameState.roundNumber !== gameState.roundNumber;
+
+        const entries: LogEntry[] = [];
+        if (oldPhase !== 'DRAWING' && newPhase === 'DRAWING' && gameState.roundNumber === 1) {
+            entries.push({ type: 'system', message: 'Game started!' });
+        }
+        if (oldPhase !== 'WAITING' && newPhase === 'WAITING') {
+            entries.push({ type: 'system', message: 'Game ended — back to the lobby.' });
+        }
+
         return {
             room: { ...s.room, gameState },
-            roomLog: isNewRound ? [] : s.roomLog,
+            roomLog: isNewRound ? entries : [...s.roomLog, ...entries],
         };
     });
 });
@@ -190,7 +202,10 @@ socket.on('game:returnToLobbyResult', (result: { success: boolean; reason?: stri
 
 socket.on('game:startResult', (result: { success: boolean; reason?: string }) => {
     if (!result.success) {
-        useGameStore.setState({ errorMessage: result.reason ?? 'Failed to start game.' });
+        useGameStore.setState((s) => {
+            const entry: LogEntry = { type: 'system', message: result.reason ?? 'Failed to start game.' };
+            return { roomLog: [...s.roomLog, entry] };
+        });
     }
 });
 

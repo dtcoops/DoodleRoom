@@ -59,6 +59,21 @@ describe('Game Manager', () => {
         expect(room.players[0].score).toBe(0);
         expect(room.players[1].score).toBe(0);
     });
+
+    it('ends the game if fewer than 2 players remain after someone leaves', () => {
+        const host: Player = { id: 'player-1', name: 'Host', score: 0 };
+        const player: Player = { id: 'player-2', name: 'Player', score: 0 };
+        const room = createRoom(host);
+        room.players.push(player);
+        gameStart(room, 2);
+
+        // Simulate player-2 actually leaving the room (not just the game state)
+        room.players = room.players.filter((p) => p.id !== 'player-2');
+
+        handlePlayerLeftDuringGame(room, 'player-2');
+
+        expect(room.gameState.phase).toBe('GAME_OVER');
+    });
 });
 
 describe('advanceToNextRound', () => {

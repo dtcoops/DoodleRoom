@@ -1,6 +1,6 @@
 import { Server, Socket } from 'socket.io';
 import { createRoom, joinRoom, leaveRoom } from '../../rooms/roomManager';
-import { handlePlayerLeftDuringGame, clearRoundTimer } from '../../game/gameManager';
+import { handlePlayerLeftDuringGame, clearRoundTimer, toPublicRoom } from '../../game/gameManager';
 import { broadcastRoundState } from '../game/broadcastRoundState';
 import { getRoom } from '../../rooms/roomManager';
 import type { Player } from '../../types/types';
@@ -20,7 +20,10 @@ export function registerRoomHandlers(io: Server, socket: Socket, socketRoomMap: 
             socket.join(room.roomCode);
             socketRoomMap.set(socket.id, room.roomCode);
 
-            socket.emit('room:createResult', { success: true, room });
+            socket.emit('room:createResult', { 
+                success: true, 
+                room: toPublicRoom(room) 
+            });
         } catch (error) {
             console.error('Failed to create room:', error);
             socket.emit('room:createResult', {
@@ -43,7 +46,10 @@ export function registerRoomHandlers(io: Server, socket: Socket, socketRoomMap: 
             socket.join(roomCode);
             socketRoomMap.set(socket.id, roomCode);
 
-            socket.emit('room:joinResult', { success: true, room: result.room });
+            socket.emit('room:joinResult', { 
+                success: true, 
+                room: toPublicRoom(result.room) 
+            });
             // Notify everyone else already in the room that a new player joined
             socket.to(roomCode).emit('room:playerJoined', { player });
         } catch (error) {
@@ -66,21 +72,32 @@ export function registerRoomHandlers(io: Server, socket: Socket, socketRoomMap: 
 
             socket.leave(roomCode);
             socketRoomMap.delete(socket.id);
+            
+            console.log('about to check roomDeleted');
             if (result.roomDeleted) {
-                clearRoundTimer(result.room); // stop any pending timer for this now-dead room
+                clearRoundTimer(result.room);
             } else {
+                console.log('about to call handlePlayerLeftDuringGame');
                 handlePlayerLeftDuringGame(result.room, socket.id, (updatedRoom) => {
+                    console.log('about to broadcastRoundState');
                     broadcastRoundState(io, updatedRoom);
+                    console.log('broadcastRoundState succeeded');
                 });
+                console.log('handlePlayerLeftDuringGame returned');
             }
 
-            socket.emit('room:leaveResult', result);
+            console.log('about to emit leaveResult');
+            socket.emit('room:leaveResult', { 
+                ...result, 
+                room: toPublicRoom(result.room) 
+            });
+            console.log('about to emit playerLeft');
             socket.to(roomCode).emit('room:playerLeft', { playerId: socket.id, hostId: result.room.hostId });
+            console.log('all emits succeeded');
         } catch (error) {
             console.error('Failed to leave room:', error);
         }
     });
-
     socket.on('room:chat', ({ text }: { text: string }) => {
         try {
             const roomCode = socketRoomMap.get(socket.id);

@@ -171,11 +171,16 @@ describe('broadcastRoundState timer integration', () => {
             hostSocket.once('game:state', () => resolve());
         });
 
+        await new Promise<void>((resolve) => {
+            hostSocket.once('game:state', (state) => {
+                expect(state.phase).toBe('GAME_OVER');
+                resolve();
+            });
+            playerSocket.disconnect();
+        });
+    
         let receivedBroadcastAfterEmpty = false;
         hostSocket.on('game:state', () => { receivedBroadcastAfterEmpty = true; });
-
-        // both players leave
-        playerSocket.disconnect();
         hostSocket.emit('room:leave', { roomCode });
 
         await wait(300); // give the (should-be-cancelled) 100ms timer a chance to wrongly fire

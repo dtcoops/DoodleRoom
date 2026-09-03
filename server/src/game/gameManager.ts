@@ -95,9 +95,24 @@ export function handlePlayerLeftDuringGame(room: Room, playerId: string, onRound
     }
     
     removeFromTurnOrder(room, playerId);
+
+    // not enough players left to continue
+    if (room.players.length < 2) {
+        endGame(room);
+        onRoundAdvance?.(room);
+        return;
+    }
+
     if (room.gameState.drawerId === playerId) {
         advanceToNextRound(room, onRoundAdvance);
     }
+}
+
+export function toPublicRoom(room: Room): Omit<Room, 'gameState'> & { gameState: ReturnType<typeof toPublicGameState> } {
+    return {
+        ...room,
+        gameState: toPublicGameState(room.gameState),
+    };
 }
 
 export function toPublicGameState(gameState: GameState): Omit<GameState, 'currentWord' | 'roundTimer'> & { wordLength: number | null } {
