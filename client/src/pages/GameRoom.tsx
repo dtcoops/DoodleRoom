@@ -15,6 +15,7 @@ export function GameRoom() {
     const startGame = useGameStore((s) => s.startGame);
     const leaveRoom = useGameStore((s) => s.leaveRoom);
     const currentWord = useGameStore((s) => s.currentWord);
+    const requestClearCanvas = useGameStore((s) => s.requestClearCanvas);
     const [incomingSegments, setIncomingSegments] = useState<DrawSegment[]>([]);
     const [clearSignal, setClearSignal] = useState(0);
     const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
@@ -82,6 +83,11 @@ export function GameRoom() {
         return timeRemaining !== null ? `${wordPart}  •  ${timeRemaining}s` : wordPart;
     }
 
+    function handleLocalClear() {
+        requestClearCanvas();
+        setIncomingSegments([]);
+        setClearSignal((n) => n + 1);
+    }
 
     return (
         <div className={styles.mainPage}>
@@ -95,7 +101,7 @@ export function GameRoom() {
                     incomingSegments={incomingSegments}
                     clearSignal={clearSignal}
                 />
-                <button className={styles.clearButton}>Clear</button>
+                <button className={styles.clearButton} onClick={() => handleLocalClear()}>Clear</button>
             </div>
 
             <div className={styles.chatPanel}>

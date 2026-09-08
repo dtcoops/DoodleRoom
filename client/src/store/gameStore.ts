@@ -21,6 +21,7 @@ interface GameStore {
     sendChat: (text: string) => void;
     clearError: () => void;
     returnToLobby: () => void;
+    requestClearCanvas: () => void; 
     leaveRoom: () => void;
     startGame: () => void;
 }
@@ -71,6 +72,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
     },
     startGame: () => {
         socket.emit('game:start', {});
+    },
+    requestClearCanvas: () => {
+        socket.emit('draw:clear');
     },
     clearError: () => set({ errorMessage: null }),
     leaveRoom: () => {
