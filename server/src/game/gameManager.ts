@@ -4,6 +4,7 @@ import { generateRandomWord } from "./wordGenerator";
 import { generateGameState } from "./gameState";
 
 const DEFAULT_ROUND_DURATION_MS = 60_000;
+const ROUND_END_DURATION_MS = 5_000; // Hang game x seconds after round to update score visually.
 
 function getNextDrawerId(room: Room): string {
     // First round - no drawer assigned yet
@@ -68,15 +69,22 @@ function endGame(room: Room): void {
 }
 
 export function advanceToNextRound(room: Room, onRoundAdvance?: OnRoundAdvance): void {
+    clearRoundTimer(room); // Round has concluded
+
     room.gameState.roundNumber += 1;
+    room.gameState.phase = 'ROUND_END';
+    room.gameState.roundEndsAt = Date.now() + ROUND_END_DURATION_MS; // Show Timer until next round
 
-    if (room.gameState.roundNumber > room.gameState.totalRounds) {
-        endGame(room);
-    } else {
-        startRound(room);
-    }
+    onRoundAdvance?.(room); // broadcast ROUND_END state immediately
 
-    onRoundAdvance?.(room);
+    room.gameState.roundTimer = setTimeout(() => {
+        if (room.gameState.roundNumber > room.gameState.totalRounds) {
+            endGame(room);
+        } else {
+            startRound(room);
+        }
+        onRoundAdvance?.(room); // broadcast the NEXT phase (DRAWING or GAME_OVER)
+    }, ROUND_END_DURATION_MS);
 }
 
 export function returnToLobby(room: Room): void {

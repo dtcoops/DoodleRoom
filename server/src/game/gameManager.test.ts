@@ -78,31 +78,45 @@ describe('Game Manager', () => {
 
 describe('advanceToNextRound', () => {
     it('advances to the next round and picks the next drawer', () => {
+        vi.useFakeTimers();
+
         const host: Player = { id: 'player-1', name: 'Host', score: 0 };
         const room = createRoom(host);
         room.players.push({ id: 'player-2', name: 'Bob', score: 0 });
         gameStart(room, 2); // 2 total rounds
 
         advanceToNextRound(room);
+        expect(room.gameState.phase).toBe('ROUND_END');
+        vi.advanceTimersByTime(5_000); // let the ROUND_END delay elapse
 
         expect(room.gameState.phase).toBe('DRAWING');
         expect(room.gameState.roundNumber).toBe(2);
         expect(room.gameState.drawerId).toBe('player-2');
+
+        vi.useRealTimers();
     });
 
     it('transitions to GAME_OVER once all rounds are complete', () => {
+        vi.useFakeTimers();
+
         const host: Player = { id: 'player-1', name: 'Host', score: 0  };
         const room = createRoom(host);
         room.players.push({ id: 'player-2', name: 'Bob', score: 0 });
         gameStart(room, 1);
 
         advanceToNextRound(room);
+        expect(room.gameState.phase).toBe('ROUND_END');
+        vi.advanceTimersByTime(5_000); // let the ROUND_END delay elapse
 
         expect(room.gameState.phase).toBe('GAME_OVER');
         expect(room.gameState.drawerId).toBeNull();
+
+        vi.useRealTimers();
     });
 
     it('resets correctGuessers and snapshots scores when a new round starts', () => {
+        vi.useFakeTimers();
+
         const host: Player = { id: 'player-1', name: 'Host', score: 0 };
         const player: Player = { id: 'player-2', name: 'Player', score: 0 };
         const room = createRoom(host);
@@ -114,9 +128,13 @@ describe('advanceToNextRound', () => {
         player.score = 50;
 
         advanceToNextRound(room);
+        expect(room.gameState.phase).toBe('ROUND_END');
+        vi.advanceTimersByTime(5_000); // let the ROUND_END delay elapse
 
         expect(room.gameState.correctGuessers).toEqual([]);
         expect(room.gameState.scoresAtRoundStart).toEqual({ 'player-1': 0, 'player-2': 50 });
+
+        vi.useRealTimers();
     });
 });
 
@@ -151,6 +169,8 @@ describe("handlePlayerLeftDuringGame", () => {
         expect(room.gameState.turnOrder).toEqual(['player-1']);
     });
     it('The drawer leaves during DRAWING game state, should move to next round', () => {
+        vi.useFakeTimers();
+
         const host: Player = { id: 'player-1', name: 'Host', score: 0  };
         const player: Player = { id: 'player-2', name: 'Player', score: 0  };
         const room = createRoom(host);
@@ -158,10 +178,15 @@ describe("handlePlayerLeftDuringGame", () => {
         gameStart(room, 2);
 
         handlePlayerLeftDuringGame(room, 'player-1'); // Room host defaults to drawerId. Drawer leaves during game.
+        expect(room.gameState.phase).toBe('ROUND_END'); // immediate transition, drawer removed from turnOrder
+        vi.advanceTimersByTime(5_000);
+
         expect(room.gameState.turnOrder).toEqual(['player-2']);
         expect(room.gameState.roundNumber).toBe(2);
         expect(room.gameState.drawerId).toBe('player-2');
         expect(room.gameState.phase).toBe('DRAWING');
+
+        vi.useRealTimers();
     });
 });
 

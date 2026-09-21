@@ -24,11 +24,14 @@
 .inputRow {
     display: flex;
     gap: 8px;
+    padding: 4px;
 }
 
 .inputRow input {
     padding: 10px 12px;
     font-size: 1rem;
+    flex: 1;
+    min-width: 0;
 }
 
 .inputRow button {
@@ -43,4 +46,5 @@
 
 .buttonSlot {
     width: 100px;
+    flex-shrink: 0;
 }
