@@ -173,11 +173,10 @@ socket.on('game:guessBroadcast', (payload: { playerId: string; playerName: strin
     });
 });
 
-socket.on('game:state', (gameState: ClientGameState) => {
+socket.on('game:state', (payload: ClientGameState & { players?: Player[] }) => {
+    const { players, ...gameState } = payload;
     useGameStore.setState((s) => {
-        if (!s.room) {
-            return {};
-        }
+        if (!s.room) return {};
 
         const oldPhase = s.room.gameState.phase;
         const newPhase = gameState.phase;
@@ -192,7 +191,11 @@ socket.on('game:state', (gameState: ClientGameState) => {
         }
 
         return {
-            room: { ...s.room, gameState },
+            room: {
+                ...s.room,
+                gameState,
+                players: players ?? s.room.players,
+            },
             roomLog: isNewRound ? entries : [...s.roomLog, ...entries],
         };
     });
@@ -215,4 +218,10 @@ socket.on('game:startResult', (result: { success: boolean; reason?: string }) =>
 
 socket.on('game:word', ({ word }: { word: string }) => {
     useGameStore.setState({ currentWord: word });
+});
+
+socket.on('game:scores', ({ players }: { players: Player[] }) => {
+    useGameStore.setState((s) =>
+        s.room ? { room: { ...s.room, players } } : {}
+    );
 });

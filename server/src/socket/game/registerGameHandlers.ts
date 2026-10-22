@@ -75,6 +75,9 @@ export function registerGameHandlers(io: Server, socket: Socket, socketRoomMap: 
                     playerName: player.name,
                     correct: true,
                 });
+
+                // new: send updated scores to everyone, including the guesser
+                io.to(roomCode).emit('game:scores', { players: room.players });
             }
         } catch (error) {
             console.error('Failed to submit guess:', error);

@@ -14,10 +14,9 @@ export function PlayerPanel({ players, drawerId, phase, scoresAtRoundStart, corr
     const drawer = players.find((p) => p.id === drawerId);
     const others = players.filter((p) => p.id !== drawerId);
     const showScoreChange = phase === 'DRAWING' || phase === 'ROUND_END';
-    
+
     return (
         <div className={styles.playerPanel}>
-            {/* Show Drawer details seperately if available */}
             {drawer && (
                 <div className={styles.drawerSection}>
                     <span className={styles.drawerLabel}>Current Drawer</span>
@@ -28,13 +27,14 @@ export function PlayerPanel({ players, drawerId, phase, scoresAtRoundStart, corr
             <div className={styles.playerList}>
                 {others.map((player) => {
                     const hasGuessed = correctGuessers.includes(player.id);
-                    const scoreChange = showScoreChange
-                        ? player.score - (scoresAtRoundStart[player.id] ?? player.score)
-                        : null;
+                    const baseScore = scoresAtRoundStart[player.id] ?? player.score;
+                    const displayedTotal = phase === 'DRAWING' ? baseScore : player.score;
+                    const scoreChange = showScoreChange ? player.score - baseScore : null;
+
                     return (
                         <div key={player.id} className={styles.playerCard}>
                             <span>{player.name}</span>
-                            <span>{player.score}</span>
+                            <span>{displayedTotal}</span>
                             {phase === 'DRAWING' && (
                                 <span className={styles.status}>{hasGuessed ? '✓ Correct!' : 'Guessing...'}</span>
                             )}
