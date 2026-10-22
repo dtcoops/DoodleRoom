@@ -5,6 +5,7 @@ import { socket } from '../socket';
 import type { DrawSegment } from '../types/types';
 import { ChatWindow } from '../components/ChatWindow';
 import { DrawingCanvas } from '../components/DrawingCanvas';
+import { PlayerPanel } from '../components/PlayerPanel';
 
 import styles from './GameRoom.module.css';
 
@@ -91,6 +92,16 @@ export function GameRoom() {
 
     return (
         <div className={styles.mainPage}>
+            <div className={styles.playerPanelWrapper}>
+                <PlayerPanel
+                    players={room.players}
+                    drawerId={room.gameState.drawerId}
+                    phase={phase}
+                    scoresAtRoundStart={room.gameState.scoresAtRoundStart}
+                    correctGuessers={room.gameState.correctGuessers}
+                />
+            </div>
+
              <div className={styles.canvasWrapper}>
                 <div className={styles.wordPill}>
                     {getPillText()}

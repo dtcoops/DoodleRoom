@@ -1,0 +1,33 @@
+.playerCard {
+    background: white;
+    background-color: var(--code-bg);
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.drawerSection {
+    margin-bottom: 16px;
+}
+
+.drawerLabel {
+    display: block;
+    font-size: 0.85rem;
+    color: rgba(255,255,255,0.7);
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.status {
+    font-size: 0.85rem;
+    color: #495fbd;
+}
+
+.scoreChange {
+    font-weight: 700;
+    color: #ffd166;
+}

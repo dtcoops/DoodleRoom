@@ -92,3 +92,12 @@
 .buttonSlot {
     width: 100px;
 }
+
+.playerPanelWrapper {
+    width: 20vw;
+    height: 93.5vh;
+    margin: 16px 0px 32px 32px;
+    display: flex;
+    flex-direction: column;
+    background-color: white;
+}
