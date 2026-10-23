@@ -11,6 +11,8 @@
     display: flex;
     min-width: 0;
     box-sizing: border-box;
+    --canvas-frame: 20px;
+    padding: var(--canvas-frame);
 }
 
 .wordPill {
@@ -18,37 +20,42 @@
     top: 40px;
     left: 50%;
     transform: translateX(-50%);
-    background: white;
+    background: var(--sun);
+    color: var(--ink);
+    border: var(--doodle-border);
     border-radius: 999px;
-    padding: 8px 24px;
-    font-weight: 700;
+    padding: 6px 24px;
+    font-weight: 800;
     font-size: 1.3rem;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-    z-index: 1;
+    box-shadow: 3px 3px 0 var(--ink);
+    white-space: nowrap;
+    z-index: 3;
 }
 
 .clearButton {
     position: absolute;
-    bottom: -40px;
-    right: 80px;
+    top: calc(var(--canvas-frame) + 16px);
+    right: calc(var(--canvas-frame) + 16px);
     z-index: 1;
-    padding: 10px 20px;
-    border-radius: 8px;
-    border: 2px solid #495fbd;
-    background: white;
-    color: #495fbd;
-    font-weight: 600;
-    cursor: pointer;
+    padding: 6px 16px;
+}
+
+.buttonSlot button {
+    width: 100%;
+    padding: 8px 6px;
+    font-size: 0.9rem;
+    white-space: nowrap;
+}
+
+.buttonSlot {
+    width: 116px;
 }
 
 .buttonLeave {
-    padding: 10px 20px;
-    border-radius: 8px;
-    border: 2px solid white;
-    background: white;
-    color: #495fbd;
-    font-weight: 600;
-    cursor: pointer;
+    width: 116px;
+    padding: 8px 6px;
+    font-size: 0.9rem;
+    white-space: nowrap;
 }
 
 .chatPanel {
@@ -60,7 +67,8 @@
 }
 
 .roomInfo {
-    padding-top: 16px;
+    margin: 0;
+    padding-top: 8px;
     text-align: center;
     font-size: 1.3rem;
     color: white;
@@ -68,29 +76,16 @@
 }
 
 .roomInfo strong {
-    color: #ffd166;
+    color: var(--sun);
+    letter-spacing: 2px;
 }
 
 .controls {
     display: flex;
+    flex-wrap: wrap;
     justify-content: center;
-    gap: 12px;
-    padding: 8px 0;
-}
-
-.controls button {
-    padding: 10px 20px;
-    border-radius: 8px;
-    border: 2px solid white;
-    background: white;
-    color: #495fbd;
-    font-weight: 600;
-    cursor: pointer;
-    flex-shrink: 0;
-}
-
-.buttonSlot {
-    width: 100px;
+    gap: 10px;
+    padding: 10px 0 14px;
 }
 
 .playerPanelWrapper {
@@ -98,6 +93,10 @@
     height: 93.5vh;
     margin: 16px 0px 32px 32px;
     display: flex;
-    flex-direction: column;
-    background-color: white;
+    flex-direction: column;   
+    background-color: var(--paper);
+    border: var(--doodle-border);
+    border-radius: 16px;
+    box-shadow: var(--doodle-shadow);
+    overflow: hidden;
 }

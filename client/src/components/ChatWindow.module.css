@@ -1,8 +1,12 @@
 .chatWindow {
-    background: #f4f3ec;
+    background: var(--paper);
+    border: var(--doodle-border);
+    border-radius: 16px;
+    box-shadow: var(--doodle-shadow);
     display: flex;
     flex: 1;
     flex-direction: column;
+    min-height: 0;
     padding: 12px;
     box-sizing: border-box;
     gap: 8px;
@@ -10,41 +14,43 @@
 
 .log {
     flex: 1;
+    min-height: 0;
     overflow-y: auto;
-    border-radius: 8px;
-    background-color: var(--code-bg);
-    padding: 12px;
+    border-radius: 10px;
+    border: 2px solid var(--ink);
+    background-color: white;
+    color: var(--ink);
+    padding: 10px 12px;
     text-align: left;
+    font-size: 0.95rem;
+    overflow-wrap: anywhere;
 }
 
 .log > div {
     margin-bottom: 6px;
 }
 
+.systemMessage {
+    color: rgba(43, 45, 66, 0.6);
+    font-style: italic;
+}
+
 .inputRow {
     display: flex;
     gap: 8px;
-    padding: 4px;
 }
 
 .inputRow input {
-    padding: 10px 12px;
-    font-size: 1rem;
     flex: 1;
     min-width: 0;
-}
-
-.inputRow button {
-    padding: 10px 20px;
-    border-radius: 8px;
-    border: 2px solid white;
-    background: white;
-    color: #495fbd;
-    font-weight: 600;
-    cursor: pointer;
+    padding: 8px 12px;
+    font-size: 1rem;
 }
 
 .buttonSlot {
-    width: 100px;
     flex-shrink: 0;
+}
+
+.buttonSlot button {
+    padding: 8px 14px;
 }

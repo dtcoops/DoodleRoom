@@ -1,4 +1,14 @@
 :root {
+  /* Doodle theme tokens */
+  --ink: #2b2d42;
+  --paper: #fff8e7;
+  --sun: #ffd166;
+  --leaf: #067a5b;
+  --doodle-border: 3px solid var(--ink);
+  --doodle-shadow: 4px 4px 0 var(--ink);
+}
+
+:root {
   --text: #6b6375;
   --text-h: #08060d;
   --bg: #1e3097;
@@ -87,6 +97,42 @@ h2 {
 }
 
 button {
-  background-color: var(--button-bg);
-  color: var(--button-text);
+  font: inherit;
+  font-weight: 700;
+  padding: 10px 20px;
+  border: var(--doodle-border);
+  border-radius: 12px;
+  background: var(--paper);
+  color: var(--ink);
+  box-shadow: 3px 3px 0 var(--ink);
+  cursor: pointer;
+  transition: transform 0.08s, box-shadow 0.08s;
+}
+
+button:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0 var(--ink);
+}
+
+button:active {
+  transform: translate(3px, 3px);
+  box-shadow: 0 0 0 var(--ink);
+}
+
+input {
+  font: inherit;
+  padding: 10px 14px;
+  border: var(--doodle-border);
+  border-radius: 12px;
+  background: var(--paper);
+  color: var(--ink);
+  outline: none;
+}
+
+input::placeholder {
+  color: rgba(43, 45, 66, 0.55);
+}
+
+input:focus {
+  box-shadow: 0 0 0 3px var(--sun);
 }

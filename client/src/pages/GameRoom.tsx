@@ -142,9 +142,9 @@ export function GameRoom() {
                         {isHost && phase === 'WAITING' && (
                             <button onClick={() => startGame()}>Start Game</button>
                         )}
-                    </div>
-                    <div className={styles.buttonSlot}>
-                        {isHost && <button onClick={() => returnToLobby()}>End Game</button>}
+                        {isHost && (phase === 'DRAWING' || phase === 'ROUND_END') && (
+                            <button onClick={() => returnToLobby()}>End Game</button>
+                        )}
                     </div>
                     <button className={styles.buttonLeave} onClick={() => leaveRoom()}>Leave Room</button>
                 </div>

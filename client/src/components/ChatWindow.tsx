@@ -13,7 +13,8 @@ export function ChatWindow({ shouldSendAsGuess }: ChatWindowProps) {
     const submitGuess = useGameStore((s) => s.submitGuess);
     const sendChat = useGameStore((s) => s.sendChat);
 
-    function handleSubmit() {
+    function handleSubmit(e: React.FormEvent) {
+        e.preventDefault();
         if (!message.trim()) {
             return;
         }
@@ -45,16 +46,16 @@ export function ChatWindow({ shouldSendAsGuess }: ChatWindowProps) {
                 })}
             </div>
 
-            <div className={styles.inputRow}>
+            <form className={styles.inputRow} onSubmit={handleSubmit}>
                 <input
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
                     placeholder={shouldSendAsGuess ? "Type your guess..." : "Type a message..."}
                 />
                 <div className={styles.buttonSlot}>
-                    <button onClick={handleSubmit}>Send</button>
+                    <button type="submit">Send</button>
                 </div>
-            </div>
+            </form>
         </div>
     );
 }

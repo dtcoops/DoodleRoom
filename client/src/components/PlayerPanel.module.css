@@ -1,29 +1,55 @@
+.playerPanel {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: 8px;
+    overflow-y: auto;
+    color: var(--ink);
+    text-align: left;
+}
+
+.playerList {
+    display: flex;
+    flex-direction: column;
+}
+
 .playerCard {
     background: white;
-    background-color: var(--code-bg);
-    border-radius: 8px;
-    padding: 10px 14px;
-    margin: 8px;
+    border: var(--doodle-border);
+    border-radius: 12px;
+    box-shadow: 3px 3px 0 var(--ink);
+    padding: 8px 12px;
+    margin: 6px 4px;
     display: flex;
+    flex-wrap: wrap;
     justify-content: space-between;
     align-items: center;
+    gap: 2px 8px;
+    font-weight: 700;
 }
 
 .drawerSection {
-    margin-bottom: 16px;
+    margin-bottom: 12px;
 }
 
-.drawerLabel {
+.drawerSection .playerCard {
+    background: var(--sun);
+}
+
+.drawerLabel,
+.standingsLabel {
     display: block;
-    font-size: 0.85rem;
-    color: rgba(255,255,255,0.7);
-    margin-bottom: 4px;
+    font-size: 0.8rem;
+    color: var(--ink);
+    opacity: 0.65;
+    margin: 4px 6px 0;
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
 
 .status {
     font-size: 0.85rem;
+    font-weight: 600;
     color: #495fbd;
 }
 

@@ -56,8 +56,6 @@ export function DrawingCanvas({ enabled, onDraw, incomingSegments, clearSignal }
             const rect = parent.getBoundingClientRect();
             const width = rect.width - paddingX;
             const height = rect.height - paddingY;
-
-            console.log({ rectWidth: rect.width, rectHeight: rect.height, paddingX, paddingY, computedWidth: width, computedHeight: height });
             
             canvas!.width = width * dpr;
             canvas!.height = height * dpr;
