@@ -1,0 +1,43 @@
+.overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.45);
+}
+
+.card {
+    background: white;
+    border-radius: 16px;
+    padding: 32px 48px;
+    text-align: center;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+}
+
+.headline {
+    margin: 0 0 8px;
+    font-size: 1.8rem;
+    color: #495fbd;
+}
+
+.score {
+    margin: 0 0 20px;
+    color: #6b6375;
+}
+
+.button {
+    padding: 10px 24px;
+    border-radius: 8px;
+    border: 2px solid #495fbd;
+    background: #495fbd;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.waiting {
+    margin: 0;
+    color: #6b6375;
+}

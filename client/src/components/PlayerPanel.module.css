@@ -31,3 +31,12 @@
     font-weight: 700;
     color: #ffd166;
 }
+
+.standingsLabel {
+    display: block;
+    font-size: 0.85rem;
+    color: #495fbd;
+    margin: 8px 8px 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}

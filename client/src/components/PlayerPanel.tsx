@@ -15,6 +15,23 @@ export function PlayerPanel({ players, drawerId, phase, scoresAtRoundStart, corr
     const others = players.filter((p) => p.id !== drawerId);
     const showScoreChange = phase === 'DRAWING' || phase === 'ROUND_END';
 
+    if (phase === 'GAME_OVER') {
+        const standings = [...players].sort((a, b) => b.score - a.score);
+        return (
+            <div className={styles.playerPanel}>
+                <span className={styles.standingsLabel}>Final Standings</span>
+                <div className={styles.playerList}>
+                    {standings.map((player, i) => (
+                        <div key={player.id} className={styles.playerCard}>
+                            <span>{i + 1}. {player.name}</span>
+                            <span>{player.score}</span>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        );
+    }
+    
     return (
         <div className={styles.playerPanel}>
             {drawer && (

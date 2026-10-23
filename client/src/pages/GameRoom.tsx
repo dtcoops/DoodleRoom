@@ -6,6 +6,7 @@ import type { DrawSegment } from '../types/types';
 import { ChatWindow } from '../components/ChatWindow';
 import { DrawingCanvas } from '../components/DrawingCanvas';
 import { PlayerPanel } from '../components/PlayerPanel';
+import { GameOverBanner } from '../components/GameOverBanner';
 
 import styles from './GameRoom.module.css';
 
@@ -45,7 +46,8 @@ export function GameRoom() {
     }, [room]);
 
     useEffect(() => {
-        if (!room || room.gameState.phase !== 'DRAWING' || !room.gameState.roundEndsAt) {
+        const currentPhase = room?.gameState.phase;
+        if (!room || (currentPhase !== 'DRAWING' && currentPhase !== 'ROUND_END') || !room.gameState.roundEndsAt) {
             setTimeRemaining(null);
             return;
         }
@@ -72,6 +74,7 @@ export function GameRoom() {
     const hasGuessedCorrectly = room.gameState.correctGuessers.includes(you.id);
     const shouldSendAsGuess = phase === 'DRAWING' && !isDrawer && !hasGuessedCorrectly;
     const wordLength = room.gameState.wordLength;
+    const canDraw = isDrawer || phase === 'WAITING';
 
     function handleLocalDraw(segment: DrawSegment) {
         socket.emit('draw:segment', segment);
@@ -79,7 +82,15 @@ export function GameRoom() {
     }
 
     function getPillText() {
-        if (phase === 'WAITING') return 'DoodleRoom';
+        if (phase === 'WAITING') {
+            return 'DoodleRoom';
+        }
+        if (phase === 'GAME_OVER') {
+            return 'Game Over';
+        }
+        if (phase === 'ROUND_END') {
+            return timeRemaining !== null ? `Next round in ${timeRemaining}s` : 'Round over';
+        }
         const wordPart = isDrawer ? currentWord : `${wordLength ?? '?'} letters`;
         return timeRemaining !== null ? `${wordPart}  •  ${timeRemaining}s` : wordPart;
     }
@@ -107,12 +118,21 @@ export function GameRoom() {
                     {getPillText()}
                 </div>
                 <DrawingCanvas
-                    enabled={isDrawer || phase === 'WAITING'}
+                    enabled={canDraw}
                     onDraw={handleLocalDraw}
                     incomingSegments={incomingSegments}
                     clearSignal={clearSignal}
                 />
-                <button className={styles.clearButton} onClick={() => handleLocalClear()}>Clear</button>
+                {canDraw && (
+                    <button className={styles.clearButton} onClick={() => handleLocalClear()}>Clear</button>
+                )}
+                {phase === 'GAME_OVER' && (
+                    <GameOverBanner
+                        players={room.players}
+                        isHost={isHost}
+                        onReturnToLobby={returnToLobby}
+                    />
+                )}
             </div>
 
             <div className={styles.chatPanel}>
