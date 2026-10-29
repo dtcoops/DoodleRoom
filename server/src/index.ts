@@ -4,8 +4,12 @@ import { Request, Response } from 'express';
 import { createServer } from 'http';
 import { registerSocketHandlers } from './socket';
 
+import cors from 'cors';
+import { getAllowedOrigins } from './config';
+
 dotenv.config();
 const app = express();
+app.use(cors({ origin: getAllowedOrigins() }));
 
 app.get('/health', (req: Request, res: Response) => {
     res.json({ ok: true });

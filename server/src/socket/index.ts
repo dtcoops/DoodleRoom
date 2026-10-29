@@ -4,6 +4,7 @@ import type { Server as HttpServer } from 'http';
 import { registerRoomHandlers } from './rooms/registerRoomHandlers';
 import { registerGameHandlers } from './game/registerGameHandlers';
 import { registerDrawHandlers } from './game/registerDrawHandlers';
+import { getAllowedOrigins } from '../config';
 
 export function registerSocketHandlers(httpServer: HttpServer): Server {
     const allowedOrigins = (process.env.CLIENT_ORIGIN ?? 'http://localhost:5173')
@@ -11,7 +12,7 @@ export function registerSocketHandlers(httpServer: HttpServer): Server {
         .map((o) => o.trim());
 
     const io = new Server(httpServer, {
-        cors: { origin: allowedOrigins },
+        cors: { origin: getAllowedOrigins() },
     });
 
     const socketRoomMap = new Map<string, string>();

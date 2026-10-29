@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { useServerStatus } from "../hooks/useServerStatus";
 
 import { useGameStore } from "../store/gameStore";
 import styles from './HomeScreen.module.css';
@@ -9,7 +10,8 @@ export function HomeScreen() {
     const [name, setName] = useState('');
     const [mode, setMode] = useState<Mode>('choose');
     const [roomCode, setRoomCode] = useState('');
-
+    
+    const serverReady = useServerStatus();
     const createRoom = useGameStore((s) => s.createRoom);
     const joinRoom = useGameStore((s) => s.joinRoom);
     const errorMessage = useGameStore((s) => s.errorMessage);
@@ -35,7 +37,7 @@ export function HomeScreen() {
                 </div>
             )}
 
-            {mode === 'create' && (
+            {!serverReady || mode === 'create' && (
                 <div className={ styles.form }>
                     <div className={styles.inputGroup}>
                         <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" />
@@ -47,7 +49,7 @@ export function HomeScreen() {
                 </div>
             )}
 
-            {mode === 'join' && (
+            {!serverReady || mode === 'join' && (
                 <div className={ styles.form }>
                     <div className={styles.inputGroup}>
                         <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" />
@@ -60,6 +62,7 @@ export function HomeScreen() {
                 </div>
             )}
 
+            {!serverReady && <p className={styles.notice}>Waking up the server… this can take up to a minute.</p>}
             {errorMessage && <p>{errorMessage}</p>}
         </div>
     )

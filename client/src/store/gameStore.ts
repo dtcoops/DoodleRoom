@@ -94,6 +94,10 @@ socket.on('disconnect', () =>
     useGameStore.setState({ connected: false })
 );
 
+socket.on('connect_error', () =>
+    useGameStore.setState({ errorMessage: 'Could not reach the server. Retrying…' })
+);
+
 socket.on('room:createResult', (result: CreateResult) => {
     if (result.success) {
         const you = result.room.players.find((p) => p.id === socket.id);
